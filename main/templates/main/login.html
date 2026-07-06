@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block title %}Login - GarageGo{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <div class="card card-garage overflow-hidden">
+                <div class="card-header bg-dark text-white text-center py-4">
+                    <h4 class="fw-black mb-1">🔑 GarageGo Me Login Karein</h4>
+                    <p class="text-white-50 small mb-0">Jabalpur division mechanics aur owners direct connected portal</p>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">Contact Mobile Number *</label>
+                            <input type="tel" name="contact" class="form-control" placeholder="E.g., 9001122334" required>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label small fw-bold text-muted">Password *</label>
+                            <input type="password" name="password" class="form-control" placeholder="Password daalein" required>
+                        </div>
+                        <button type="submit" class="btn btn-amber w-100 fw-bold py-2">🔑 SECURE LOGIN</button>
+                    </form>
+                    
+                    <div class="text-center mt-4 pt-3 border-top">
+                        <p class="text-muted small">Account nahi hai? <a href="{% url 'register' %}" class="text-decoration-none fw-bold">Naya Account Banayein</a></p>
+                    </div>
+                    
+                    <div class="alert alert-secondary small mt-3" style="font-size: 0.75rem;">
+                        <strong>Test Credentials:</strong><br>
+                        • Admin: <code>9999999999</code> / <code>admin123</code><br>
+                        • Mechanic: <code>9876543210</code> / <code>123</code><br>
+                        • Customer: <code>9001122334</code> / <code>123</code>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

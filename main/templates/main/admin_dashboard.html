@@ -1,0 +1,274 @@
+{% extends 'base.html' %}
+{% block title %}Admin Panel - GarageGo{% endblock %}
+
+{% block extra_css %}
+<style>
+    .admin-panel { display: none; }
+    .admin-panel.active { display: block; }
+    .admin-tab-btn { background: transparent; border: none; color: #6b7280; }
+    .admin-tab-btn.active { background: white; border: 1px solid #e2e8f0; border-radius: 0.75rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); color: #0f172a; font-weight: 700; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Header -->
+    <div class="card bg-dark text-white border-secondary mb-4">
+        <div class="card-body p-4">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+                <div>
+                    <span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-25 mb-2">Supreme Command Dashboard</span>
+                    <h4 class="fw-black mb-1">👑 SUPREME ADMIN PANEL</h4>
+                    <p class="text-white-50 small mb-0">Platform operations, mechanics verify, spares catalog, commissions</p>
+                </div>
+                <div class="bg-dark border border-secondary p-3 rounded text-center">
+                    <div class="text-white-50 small">Platform Commission (2%)</div>
+                    <div class="fw-black text-warning fs-4">₹{{ stats.total_commission|floatformat:0 }}</div>
+                </div>
+            </div>
+            
+            <div class="row g-3 mt-3 pt-3 border-top border-secondary">
+                <div class="col-6 col-md-3">
+                    <div class="text-white-50 small">Pending Mechanics</div>
+                    <div class="fw-bold text-white">{{ stats.pending_mechanics }}</div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="text-white-50 small">Pending Cars</div>
+                    <div class="fw-bold text-white">{{ stats.pending_cars }}</div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="text-white-50 small">Active Bookings</div>
+                    <div class="fw-bold text-white">{{ stats.active_bookings }}</div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="text-white-50 small">Total Orders</div>
+                    <div class="fw-bold text-white">{{ stats.total_orders }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="card card-garage overflow-hidden">
+        <div class="bg-light border-bottom p-2 d-flex flex-wrap gap-2">
+            <button class="btn btn-sm admin-tab-btn active" onclick="switchTab('mechanics')">🔧 Verify Mechanics ({{ stats.pending_mechanics }})</button>
+            <button class="btn btn-sm admin-tab-btn" onclick="switchTab('cars')">🚗 Used Cars</button>
+            <button class="btn btn-sm admin-tab-btn" onclick="switchTab('bookings')">🧼 Assign Bookings</button>
+            <button class="btn btn-sm admin-tab-btn" onclick="switchTab('orders')">🛒 Spares Orders ({{ stats.total_orders }})</button>
+            <button class="btn btn-sm admin-tab-btn" onclick="switchTab('parts')">➕ Add Parts</button>
+            <button class="btn btn-sm admin-tab-btn" onclick="switchTab('leads')">💰 Leads</button>
+        </div>
+
+        <div class="p-4">
+            <!-- TAB 1: Mechanics -->
+            <div id="panel-mechanics" class="admin-panel active">
+                <h6 class="fw-bold text-muted text-uppercase small mb-3">Mechanic Approval Requests</h6>
+                {% for mech in mechanics %}
+                <div class="border-bottom py-3 d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+                    <div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="fw-bold small">{{ mech.name }} | "{{ mech.shop_name }}"</span>
+                            <span class="badge {% if mech.status == 'Active' %}bg-success{% else %}bg-warning text-dark{% endif %}" style="font-size: 0.6rem;">{{ mech.status }}</span>
+                        </div>
+                        <p class="text-muted small mb-0">📞 {{ mech.contact }} | 📍 {{ mech.city }}</p>
+                        <p class="text-muted small mb-0">🛡️ {{ mech.id_card }} | 📜 {{ mech.certifications|join:", " }}</p>
+                    </div>
+                    {% if mech.status == 'Pending' %}
+                    <div class="d-flex gap-2">
+                        <form method="post" action="{% url 'approve_mechanic' mech.id %}" class="d-inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="status" value="Active">
+                            <button type="submit" class="btn btn-success btn-sm fw-bold">✅ APPROVE</button>
+                        </form>
+                        <form method="post" action="{% url 'approve_mechanic' mech.id %}" class="d-inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="status" value="Rejected">
+                            <button type="submit" class="btn btn-outline-danger btn-sm fw-bold">❌ REJECT</button>
+                        </form>
+                    </div>
+                    {% endif %}
+                </div>
+                {% empty %}
+                <p class="text-muted">No mechanics registered.</p>
+                {% endfor %}
+            </div>
+
+            <!-- TAB 2: Cars -->
+            <div id="panel-cars" class="admin-panel">
+                <h6 class="fw-bold text-muted text-uppercase small mb-3">Used Cars Management</h6>
+                {% for car in cars %}
+                <div class="border-bottom py-3 d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+                    <div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="fw-bold small">{{ car.make }} {{ car.model }} ({{ car.year }})</span>
+                            <span class="badge {% if car.status == 'Approved' %}bg-success{% elif car.status == 'Sold' %}bg-info{% else %}bg-warning text-dark{% endif %}" style="font-size: 0.6rem;">{{ car.status }}</span>
+                        </div>
+                        <p class="text-muted small mb-0">💰 ₹{{ car.price|floatformat:0 }} | 📞 {{ car.seller_name }} ({{ car.seller_contact }})</p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        {% if car.status == 'Pending' %}
+                        <form method="post" action="{% url 'approve_car' car.id %}" class="d-inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="status" value="Approved">
+                            <button type="submit" class="btn btn-success btn-sm fw-bold">✅ APPROVE</button>
+                        </form>
+                        {% endif %}
+                        {% if car.status == 'Approved' %}
+                        <form method="post" action="{% url 'approve_car' car.id %}" class="d-inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="status" value="Sold">
+                            <button type="submit" class="btn btn-amber btn-sm fw-bold">💰 MARK SOLD</button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-muted">No cars registered.</p>
+                {% endfor %}
+            </div>
+
+            <!-- TAB 3: Assign Bookings -->
+            <div id="panel-bookings" class="admin-panel">
+                <h6 class="fw-bold text-muted text-uppercase small mb-3">Assign Repair Bookings to City Mechanics</h6>
+                {% for booking in bookings %}
+                    {% if booking.status == 'Pending Assignment' %}
+                    <div class="border-bottom py-3 row align-items-center">
+                        <div class="col-md-4">
+                            <span class="badge bg-secondary" style="font-size: 0.65rem;">{{ booking.service_category }}</span>
+                            <h6 class="fw-bold small mt-1 mb-0">{{ booking.service_subtype }}</h6>
+                            <p class="text-muted small mb-0">🚗 {{ booking.car_details }} | 📍 {{ booking.city }}</p>
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label small fw-bold">Select Mechanic in "{{ booking.city }}"</label>
+                            <form method="post" action="{% url 'assign_booking' booking.id %}" class="d-flex gap-2">
+                                {% csrf_token %}
+                                <select name="mechanic_id" class="form-select form-select-sm">
+                                    {% for mech in mechanics %}
+                                        {% if mech.city == booking.city and mech.status == 'Active' %}
+                                        <option value="{{ mech.id }}">{{ mech.name }} ({{ mech.shop_name }})</option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                                <button type="submit" class="btn btn-dark btn-sm fw-bold">ASSIGN 👉</button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endif %}
+                {% empty %}
+                <p class="text-muted">No pending bookings.</p>
+                {% endfor %}
+            </div>
+
+            <!-- TAB 4: Orders -->
+            <div id="panel-orders" class="admin-panel">
+                <h6 class="fw-bold text-muted text-uppercase small mb-3">Spares COD Deliveries</h6>
+                {% for order in orders %}
+                <div class="border-bottom py-3 d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+                    <div>
+                        <h6 class="fw-bold small">Order #{{ order.id }} | {{ order.part_name }}</h6>
+                        <p class="text-muted small mb-0">Buyer: {{ order.buyer_name }} (📞 {{ order.buyer_contact }})</p>
+                        <p class="text-muted small mb-0">📍 {{ order.buyer_address }} | Qty: {{ order.quantity }} | ₹{{ order.total_price|floatformat:0 }}</p>
+                    </div>
+                    <form method="post" action="{% url 'update_order_status' order.id %}" class="d-inline">
+                        {% csrf_token %}
+                        <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+                            <option value="Processing" {% if order.status == 'Processing' %}selected{% endif %}>Processing</option>
+                            <option value="Shipped" {% if order.status == 'Shipped' %}selected{% endif %}>Shipped 🚚</option>
+                            <option value="Delivered" {% if order.status == 'Delivered' %}selected{% endif %}>Delivered ✅</option>
+                        </select>
+                    </form>
+                </div>
+                {% empty %}
+                <p class="text-muted">No orders yet.</p>
+                {% endfor %}
+            </div>
+
+            <!-- TAB 5: Add Parts -->
+            <div id="panel-parts" class="admin-panel">
+                <h6 class="fw-bold text-muted text-uppercase small mb-3">Add New Spare Part</h6>
+                <form method="post" action="{% url 'add_part' %}" class="col-lg-6">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Part Name *</label>
+                        <input type="text" name="name" class="form-control" placeholder="E.g., Maruti Swift Front Bumper" required>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label small fw-bold">Type *</label>
+                            <select name="type" class="form-select">
+                                <option value="New">New</option>
+                                <option value="Used">Used</option>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-bold">Compatibility</label>
+                            <input type="text" name="compatibility" class="form-control" placeholder="Maruti Swift (2018-2022)">
+                        </div>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label small fw-bold">Price (₹) *</label>
+                            <input type="number" name="price" class="form-control" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-bold">Stock Qty *</label>
+                            <input type="number" name="quantity" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Photo URL</label>
+                        <input type="url" name="photo_url" class="form-control" value="https://images.unsplash.com/photo-1508962914676-134849a727f0?auto=format&fit=crop&q=80&w=600">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Description</label>
+                        <textarea name="description" class="form-control" rows="2"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-dark fw-bold">⚙️ SAVE & PUBLISH</button>
+                </form>
+            </div>
+
+            <!-- TAB 6: Leads -->
+            <div id="panel-leads" class="admin-panel">
+                <h6 class="fw-bold text-muted text-uppercase small mb-3">Car Buyer Leads & Commission</h6>
+                {% for inq in inquiries %}
+                <div class="border-bottom py-3">
+                    <div class="row g-3">
+                        <div class="col-lg-4 bg-light p-3 rounded">
+                            <span class="badge bg-dark text-white small">CAR SPEC</span>
+                            <h6 class="fw-bold small mt-2">{{ inq.car_title }}</h6>
+                            <p class="text-muted small mb-0">Price: <span class="fw-bold text-warning">₹{{ inq.car.price|floatformat:0 }}</span></p>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="bg-info bg-opacity-10 p-3 rounded mb-2">
+                                <span class="badge bg-info text-white small">BUYER</span>
+                                <p class="fw-bold small mt-2 mb-1">{{ inq.buyer_name }}</p>
+                                <p class="text-muted small mb-0">📞 {{ inq.buyer_contact }}</p>
+                                <p class="text-muted small fst-italic">"{{ inq.buyer_message|truncatewords:10 }}"</p>
+                            </div>
+                        </div>
+                        <div class="col-lg-4 bg-warning bg-opacity-10 p-3 rounded">
+                            <span class="badge bg-warning text-dark small">COMMISSION</span>
+                            <p class="fw-bold small mt-2">2% Platform Fee:</p>
+                            <p class="fw-black text-warning fs-5">₹{{ inq.car.price|floatformat:0|add:0|floatformat:0 }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-muted">No inquiries yet.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function switchTab(tabId) {
+        document.querySelectorAll('.admin-panel').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.admin-tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('panel-' + tabId).classList.add('active');
+        event.target.classList.add('active');
+    }
+</script>
+{% endblock %}

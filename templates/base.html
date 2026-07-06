@@ -1,0 +1,437 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>{% block title %}GarageGo - Jabalpur Division Car Care{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* ===== GarageGo Design Tokens ===== */
+            --ink: #0a0f1c;
+            --ink-soft: #121a2b;
+            --steel: #1b2536;
+            --steel-line: rgba(255,255,255,0.08);
+
+            --amber: #ffb020;
+            --amber-deep: #e8830a;
+            --amber-glow: rgba(255, 176, 32, 0.35);
+
+            --paper: #fbf8f3;
+            --paper-dim: #f1ece2;
+            --ink-text: #16202f;
+            --muted-text: #6b7280;
+
+            --teal: #12b3a3;
+            --teal-deep: #0d8f82;
+            --danger: #ef4444;
+            --danger-deep: #dc2626;
+
+            --radius-lg: 1.25rem;
+            --radius-md: 0.85rem;
+            --radius-sm: 0.5rem;
+
+            --font-display: 'Space Grotesk', system-ui, sans-serif;
+            --font-body: 'Inter', system-ui, sans-serif;
+            --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+        }
+
+        * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+
+        html { scroll-padding-top: 84px; scroll-behavior: smooth; }
+
+        body {
+            background-color: var(--paper);
+            font-family: var(--font-body);
+            color: var(--ink-text);
+            overflow-x: hidden;
+            padding-top: 78px;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        h1, h2, h3, h4, h5, .fw-black {
+            font-family: var(--font-display);
+            letter-spacing: -0.01em;
+        }
+
+        .fw-black { font-weight: 800 !important; }
+
+        /* ===== Signature motif: hazard stripe ===== */
+        .hazard-stripe {
+            height: 6px;
+            width: 100%;
+            background-image: repeating-linear-gradient(
+                -45deg,
+                var(--amber) 0px, var(--amber) 14px,
+                var(--ink) 14px, var(--ink) 28px
+            );
+        }
+
+        /* ===== Navbar ===== */
+        .navbar-garage {
+            background: linear-gradient(180deg, rgba(10,15,28,0.97), rgba(18,26,43,0.97));
+            backdrop-filter: blur(12px);
+            box-shadow: 0 6px 28px rgba(0,0,0,0.35);
+            min-height: 72px;
+            padding-top: 0;
+            padding-bottom: 0;
+        }
+
+        .navbar-garage .navbar-brand { font-size: 1.15rem; }
+
+        .navbar-garage .navbar-brand .brand-mark {
+            font-size: 1.6rem;
+            display: inline-flex;
+            width: 40px; height: 40px;
+            align-items: center; justify-content: center;
+            background: linear-gradient(135deg, var(--amber), var(--amber-deep));
+            border-radius: var(--radius-sm);
+            box-shadow: 0 4px 14px var(--amber-glow);
+        }
+
+        .navbar-garage .nav-link {
+            color: rgba(255,255,255,0.78) !important;
+            font-family: var(--font-display);
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: color .15s ease;
+        }
+        .navbar-garage .nav-link:hover { color: var(--amber) !important; }
+
+        .navbar-garage select.form-select {
+            font-family: var(--font-mono);
+            font-weight: 600;
+            letter-spacing: .02em;
+        }
+
+        /* ===== Buttons ===== */
+        .btn-amber {
+            background: linear-gradient(135deg, var(--amber), var(--amber-deep));
+            border: none;
+            color: var(--ink);
+            font-weight: 700;
+            font-family: var(--font-display);
+            letter-spacing: 0.01em;
+            box-shadow: 0 6px 18px var(--amber-glow);
+            transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
+        }
+        .btn-amber:hover {
+            filter: brightness(1.05);
+            color: var(--ink);
+            transform: translateY(-1px);
+            box-shadow: 0 10px 24px var(--amber-glow);
+        }
+        .btn-amber:active { transform: translateY(0); }
+
+        .btn:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible {
+            outline: 2px solid var(--amber);
+            outline-offset: 2px;
+        }
+
+        /* ===== Cards (job-ticket styling) ===== */
+        .card-garage {
+            border: 1px solid rgba(0,0,0,0.06);
+            border-radius: var(--radius-lg);
+            background: #ffffff;
+            transition: transform .25s ease, box-shadow .25s ease;
+            position: relative;
+        }
+
+        .card-garage:hover {
+            box-shadow: 0 16px 40px rgba(15,23,42,0.10);
+            transform: translateY(-3px);
+        }
+
+        /* perforated ticket edge for service categories */
+        .ticket-card {
+            border-radius: var(--radius-lg);
+            overflow: visible;
+            position: relative;
+        }
+        .ticket-card::before,
+        .ticket-card::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            width: 20px; height: 20px;
+            background: var(--paper);
+            border-radius: 50%;
+            transform: translateY(-50%);
+            z-index: 2;
+        }
+        .ticket-card::before { left: -10px; }
+        .ticket-card::after { right: -10px; }
+
+        .ticket-card .card-header {
+            border-top-left-radius: var(--radius-lg) !important;
+            border-top-right-radius: var(--radius-lg) !important;
+            font-family: var(--font-display);
+            letter-spacing: 0.02em;
+        }
+
+        /* ===== Hero ===== */
+        .hero-section {
+            background:
+                radial-gradient(circle at 90% -10%, rgba(255,176,32,0.18), transparent 55%),
+                linear-gradient(135deg, var(--ink) 0%, #16233a 55%, var(--ink) 100%);
+            color: white;
+            border-radius: 1.5rem;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.06);
+        }
+
+        .hero-section::before {
+            content: 'GARAGEGO';
+            position: absolute;
+            right: -1.5rem;
+            bottom: -3.5rem;
+            font-family: var(--font-display);
+            font-size: 8rem;
+            font-weight: 800;
+            opacity: 0.045;
+            pointer-events: none;
+            letter-spacing: -0.02em;
+        }
+
+        .hero-section .hazard-corner {
+            position: absolute;
+            top: 0; left: 0;
+            width: 90px; height: 8px;
+            background-image: repeating-linear-gradient(-45deg, var(--amber) 0 8px, var(--ink) 8px 16px);
+            border-bottom-right-radius: 6px;
+        }
+
+        .hero-section h1 {
+            font-size: clamp(1.75rem, 4vw, 3rem);
+            line-height: 1.15;
+        }
+
+        /* Price / mono data */
+        .price-mono, #priceDisplay, #stickyTotal, .badge.bg-dark.text-warning {
+            font-family: var(--font-mono) !important;
+        }
+
+        /* ===== Custom checkboxes ===== */
+        .service-checkbox {
+            width: 1.15em; height: 1.15em;
+            border: 2px solid #cbd5e1;
+            cursor: pointer;
+        }
+        .service-checkbox:checked {
+            background-color: var(--amber-deep);
+            border-color: var(--amber-deep);
+        }
+
+        .service-item {
+            border-radius: var(--radius-md) !important;
+            transition: background .15s ease;
+        }
+        .service-item:hover { background: var(--paper-dim); }
+
+        /* ===== Sticky cart -> "work order slip" ===== */
+        .sticky-cart {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            background: linear-gradient(180deg, rgba(18,26,43,0.98), rgba(10,15,28,0.99));
+            backdrop-filter: blur(10px);
+            border-top: 3px solid var(--amber);
+            box-shadow: 0 -10px 30px rgba(0,0,0,0.35);
+            z-index: 1040;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+        }
+        .sticky-cart.show { transform: translateY(0); }
+
+        /* ===== Stats mini cards ===== */
+        .stat-icon {
+            width: 42px; height: 42px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: var(--radius-sm);
+            font-size: 1.1rem;
+        }
+
+        /* ===== Toasts ===== */
+        .toast-container { position: fixed; top: 88px; right: 15px; z-index: 1060; max-width: 320px; }
+        .toast { border-radius: var(--radius-md) !important; }
+
+        /* ===== Footer ===== */
+        footer.footer-garage {
+            background: var(--ink);
+            border-top: 1px solid rgba(255,255,255,0.08);
+        }
+
+        /* ===== Badges ===== */
+        .badge { font-weight: 600; }
+
+        /* ===== MOBILE ===== */
+        @media (max-width: 768px) {
+            body { padding-top: 64px; }
+            .hero-section { border-radius: 1rem; padding: 1.5rem !important; }
+            .hero-section::before { font-size: 4rem; }
+            .sticky-cart { padding: 0.65rem !important; }
+            .sticky-cart .container { gap: 0.5rem !important; }
+            .card-garage { margin-bottom: 0.75rem; }
+            .ticket-card::before, .ticket-card::after { width: 14px; height: 14px; }
+            .service-item { padding: 0.75rem !important; }
+            .form-control, .form-select { font-size: 16px; } /* prevents iOS zoom */
+        }
+
+        .container, .container-fluid { max-width: 100%; }
+        img { max-width: 100%; height: auto; }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-garage fixed-top">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="{% url 'home' %}">
+                <span class="brand-mark">🛠️</span>
+                <div class="d-flex flex-column">
+                    <span class="fw-black text-warning" style="font-size: 1.15rem; line-height: 1;">GarageGo</span>
+                    <span class="d-none d-sm-inline badge bg-dark border border-secondary text-warning" style="font-size: 0.5rem; padding: 0.15rem 0.4rem; width: fit-content; font-family: var(--font-mono);">
+                        <span class="d-inline-block bg-success rounded-circle me-1" style="width:5px;height:5px;"></span>
+                        Jabalpur Division
+                    </span>
+                </div>
+            </a>
+
+            <div class="d-flex align-items-center gap-2">
+                <!-- Mobile City Selector -->
+                <form method="post" action="{% url 'set_city' %}" class="d-flex d-lg-none">
+                    {% csrf_token %}
+                    <select name="city" class="form-select form-select-sm bg-dark text-warning border-secondary" style="width: auto; font-size: 0.75rem;" onchange="this.form.submit()">
+                        <option value="Jabalpur" {% if request.session.garagego_city == 'Jabalpur' %}selected{% endif %}>JBP</option>
+                        <option value="Katni" {% if request.session.garagego_city == 'Katni' %}selected{% endif %}>KAT</option>
+                        <option value="Satna" {% if request.session.garagego_city == 'Satna' %}selected{% endif %}>SAT</option>
+                        <option value="Maihar" {% if request.session.garagego_city == 'Maihar' %}selected{% endif %}>MAI</option>
+                        <option value="Sagar" {% if request.session.garagego_city == 'Sagar' %}selected{% endif %}>SAG</option>
+                        <option value="Damoh" {% if request.session.garagego_city == 'Damoh' %}selected{% endif %}>DAM</option>
+                    </select>
+                </form>
+
+                <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" style="padding: 0.25rem 0.5rem;">
+                    <span class="navbar-toggler-icon" style="width: 1.2em; height: 1.2em;"></span>
+                </button>
+            </div>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-2">
+                    <li class="nav-item"><a class="nav-link py-2" href="{% url 'home' %}">🏡 Home</a></li>
+                    <li class="nav-item"><a class="nav-link py-2" href="{% url 'marketplace' %}">🚗 Cars</a></li>
+                    <li class="nav-item"><a class="nav-link py-2" href="{% url 'parts' %}">⚙️ Parts</a></li>
+
+                    <!-- Desktop City Selector -->
+                    <li class="nav-item d-none d-lg-block">
+                        <form method="post" action="{% url 'set_city' %}" class="d-flex align-items-center gap-2">
+                            {% csrf_token %}
+                            <label class="text-white-50 small fw-bold mb-0">District:</label>
+                            <select name="city" class="form-select form-select-sm bg-dark text-warning border-secondary" style="width: auto;" onchange="this.form.submit()">
+                                <option value="Jabalpur" {% if request.session.garagego_city == 'Jabalpur' %}selected{% endif %}>Jabalpur 📍</option>
+                                <option value="Katni" {% if request.session.garagego_city == 'Katni' %}selected{% endif %}>Katni 📍</option>
+                                <option value="Satna" {% if request.session.garagego_city == 'Satna' %}selected{% endif %}>Satna 📍</option>
+                                <option value="Maihar" {% if request.session.garagego_city == 'Maihar' %}selected{% endif %}>Maihar 📍</option>
+                                <option value="Sagar" {% if request.session.garagego_city == 'Sagar' %}selected{% endif %}>Sagar 📍</option>
+                                <option value="Damoh" {% if request.session.garagego_city == 'Damoh' %}selected{% endif %}>Damoh 📍</option>
+                            </select>
+                        </form>
+                    </li>
+
+                    {% if user.is_authenticated %}
+                        {% if user.role == 'admin' %}
+                            <li class="nav-item"><a class="nav-link text-warning py-2" href="{% url 'admin_dashboard' %}">👑 Admin</a></li>
+                        {% elif user.role == 'mechanic' %}
+                            <li class="nav-item"><a class="nav-link text-info py-2" href="{% url 'mechanic_dashboard' %}">🔧 Workshop</a></li>
+                        {% else %}
+                            <li class="nav-item"><a class="nav-link text-success py-2" href="{% url 'user_dashboard' %}">📋 Bookings</a></li>
+                        {% endif %}
+                        <li class="nav-item ms-lg-2">
+                            <div class="d-flex align-items-center gap-2 py-2 py-lg-0">
+                                <div class="text-end d-none d-lg-block">
+                                    <div class="text-white small fw-bold" style="font-size: 0.8rem; line-height: 1.2;">{{ user.first_name }}</div>
+                                    <span class="badge {% if user.role == 'admin' %}bg-danger{% elif user.role == 'mechanic' %}bg-info{% else %}bg-warning text-dark{% endif %}" style="font-size: 0.55rem;">
+                                        {% if user.role == 'admin' %}Admin{% elif user.role == 'mechanic' %}Mechanic{% else %}Customer{% endif %}
+                                    </span>
+                                </div>
+                                <a href="{% url 'logout' %}" class="btn btn-sm btn-outline-danger" style="font-size: 0.75rem;">🚪 Logout</a>
+                            </div>
+                        </li>
+                    {% else %}
+                        <li class="nav-item ms-lg-2 py-2 py-lg-0">
+                            <a href="{% url 'login' %}" class="btn btn-amber btn-sm px-3" style="font-size: 0.8rem;">🔑 Login</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+        <div class="hazard-stripe"></div>
+    </nav>
+
+    <!-- MESSAGES -->
+    <div class="toast-container">
+        {% if messages %}
+            {% for message in messages %}
+            <div class="toast show align-items-center border-0 {% if message.tags == 'error' %}bg-danger{% elif message.tags == 'success' %}bg-success{% else %}bg-primary{% endif %} text-white mb-2" role="alert">
+                <div class="d-flex">
+                    <div class="toast-body fw-bold small" style="font-size: 0.85rem;">
+                        {% if message.tags == 'error' %}⚠️{% elif message.tags == 'success' %}✅{% else %}ℹ️{% endif %}
+                        {{ message }}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" style="font-size: 0.6rem;"></button>
+                </div>
+            </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-grow-1 py-3 py-md-4">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="footer-garage text-white-50 py-4 mt-auto">
+        <div class="container text-center">
+            <div class="d-flex justify-content-center align-items-center gap-2 mb-2 flex-wrap">
+                <span class="fw-black text-white" style="font-size: 0.95rem;">🛠️ GarageGo Car Care</span>
+                <span class="badge bg-secondary text-warning" style="font-size: 0.55rem; font-family: var(--font-mono);">V1.0 Django MVT</span>
+            </div>
+            <p class="small mb-2" style="font-size: 0.75rem;">Jabalpur Division ki supreme online platform</p>
+            <div class="d-flex justify-content-center gap-3 gap-md-4 small flex-wrap">
+                <span style="font-size: 0.7rem;">📍 City Matching</span>
+                <span style="font-size: 0.7rem;">💼 2% Commission</span>
+                <span style="font-size: 0.7rem;">🛡️ Verified Mechanics</span>
+            </div>
+            <p class="mt-3 mb-0" style="font-size: 0.65rem; font-family: var(--font-mono);">© 2026 GarageGo Inc.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        setTimeout(() => {
+            document.querySelectorAll('.toast').forEach(t => {
+                const bsToast = bootstrap.Toast.getOrCreateInstance(t);
+                bsToast.hide();
+            });
+        }, 5000);
+
+        document.querySelectorAll('.navbar-nav .nav-link').forEach(link => {
+            link.addEventListener('click', () => {
+                const navbarCollapse = document.getElementById('navbarNav');
+                if (navbarCollapse.classList.contains('show')) {
+                    bootstrap.Collapse.getInstance(navbarCollapse).hide();
+                }
+            });
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

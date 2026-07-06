@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% block title %}Mechanic Dashboard - GarageGo{% endblock %}
+
+{% block content %}
+<div class="container">
+    {% if pending %}
+    <!-- Pending Verification -->
+    <div class="card card-garage p-5 text-center border-info">
+        <div class="display-1 mb-3">🛠️</div>
+        <h4 class="fw-black text-info">Bhaiya, Thoda Intezar Karein!</h4>
+        <span class="badge bg-warning text-dark mb-3">Verification Pending</span>
+        <p class="text-muted col-lg-8 mx-auto">Aapka mechanic profile registration data save ho gaya hai. Supreme Admin verify karte hi status <strong>Active</strong> kar denge.</p>
+        
+        <div class="bg-light p-3 rounded text-start col-lg-6 mx-auto small">
+            <p class="fw-bold border-bottom pb-2">Registered Profile:</p>
+            <p>• <strong>Name:</strong> {{ mechanic.name }}</p>
+            <p>• <strong>Mobile:</strong> {{ mechanic.contact }}</p>
+            <p>• <strong>Shop:</strong> {{ mechanic.shop_name }}</p>
+            <p>• <strong>City:</strong> {{ mechanic.city }}</p>
+        </div>
+        
+        <a href="{% url 'home' %}" class="btn btn-dark mt-3">Wapas Home</a>
+    </div>
+    
+    {% else %}
+    <!-- Active Mechanic -->
+    <div class="card card-garage p-4 mb-4 d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+        <div>
+            <span class="badge bg-info text-dark mb-1">Verified Mechanic Active Workshop</span>
+            <h4 class="fw-black mb-1">🔧 Workshop Orders Dashboard</h4>
+            <p class="text-muted small mb-0">Apne assigned repairs complete karein</p>
+        </div>
+        <div class="badge bg-light border text-dark px-3 py-2">
+            🏡 {{ active_city }}
+        </div>
+    </div>
+
+    <h5 class="fw-bold mb-3 border-bottom pb-2">📋 Assigned Repair Tasks ({{ bookings|length }})</h5>
+    
+    {% if bookings %}
+        {% for booking in bookings %}
+        <div class="card card-garage mb-3">
+            <div class="card-body">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-2 mb-3 border-bottom pb-2">
+                    <div>
+                        <span class="badge bg-secondary" style="font-size: 0.65rem;">{{ booking.service_category }}</span>
+                        <h6 class="fw-bold small mt-1 mb-0">{{ booking.service_subtype }}</h6>
+                    </div>
+                    <span class="badge-status 
+                        {% if booking.status == 'Completed' %}bg-success
+                        {% elif booking.status == 'Work in Progress' %}bg-primary
+                        {% else %}bg-warning text-dark{% endif %}">
+                        {{ booking.status }}
+                    </span>
+                </div>
+                
+                <div class="row small mb-3">
+                    <div class="col-md-4">
+                        <p class="text-muted mb-1">🚗 Vehicle</p>
+                        <p class="fw-bold mb-0">{{ booking.car_details }}</p>
+                    </div>
+                    <div class="col-md-4">
+                        <p class="text-muted mb-1">👤 Customer</p>
+                        <p class="fw-bold mb-0">{{ booking.customer_name }}<br>📞 {{ booking.customer_contact }}</p>
+                    </div>
+                    <div class="col-md-4">
+                        <p class="text-muted mb-1">📍 Time & Location</p>
+                        <p class="fw-bold mb-0">{{ booking.city }}<br>{{ booking.booking_time|date:"d M, h:i A" }}</p>
+                    </div>
+                </div>
+                
+                <div class="d-flex flex-wrap gap-2 pt-2">
+                    {% if booking.status == 'Assigned' %}
+                    <form method="post" action="{% url 'update_booking_status' booking.id %}" class="d-inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="status" value="Accepted">
+                        <button type="submit" class="btn btn-primary btn-sm fw-bold">🟢 ACCEPT TASK</button>
+                    </form>
+                    <form method="post" action="{% url 'update_booking_status' booking.id %}" class="d-inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="status" value="Rejected">
+                        <button type="submit" class="btn btn-outline-danger btn-sm fw-bold">🔴 REJECT</button>
+                    </form>
+                    {% elif booking.status == 'Accepted' %}
+                    <form method="post" action="{% url 'update_booking_status' booking.id %}" class="d-inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="status" value="Work in Progress">
+                        <button type="submit" class="btn btn-info btn-sm fw-bold text-white">🚗 START REPAIR</button>
+                    </form>
+                    {% elif booking.status == 'Work in Progress' %}
+                    <form method="post" action="{% url 'update_booking_status' booking.id %}" class="d-inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="status" value="Completed">
+                        <button type="submit" class="btn btn-success btn-sm fw-bold">✅ MARK DONE</button>
+                    </form>
+                    {% elif booking.status == 'Completed' %}
+                    <div class="text-success fw-bold small">
+                        🎉 Kaam complete! Payment Cash/UPI le lein customer se.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="card card-garage p-5 text-center">
+            <p class="text-muted">Abhi aapko koi job assign nahi kiya gaya hai.</p>
+        </div>
+    {% endif %}
+    {% endif %}
+</div>
+{% endblock %}

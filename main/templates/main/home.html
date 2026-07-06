@@ -1,0 +1,339 @@
+{% extends 'base.html' %}
+{% block title %}Home - GarageGo Services{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- HERO -->
+    <div class="hero-section p-5 mb-4">
+        <div class="hazard-corner"></div>
+        <div style="position:relative; z-index:1;">
+            <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-20 mb-3" style="font-family: var(--font-mono); letter-spacing:.02em;">✨ Jabalpur Division Premium Car Care Network</span>
+            <h1 class="fw-black mb-3">
+                Apni Car ki Service Book Karein <span class="text-warning">Chutkiyon Mein!</span>
+            </h1>
+            <p class="text-white-50 mb-4 col-lg-8">
+                Katni, Jabalpur, Satna, Maihar, Sagar aur Damoh ke verified, experienced local mechanics se best repair aur maintenance paayein.
+            </p>
+
+            <div class="d-flex gap-2 mb-4 col-lg-6">
+                <div class="input-group">
+                    <span class="input-group-text bg-dark border-secondary text-white">🔍</span>
+                    <input type="text" id="serviceSearch" class="form-control bg-dark border-secondary text-white" placeholder="E.g., General Checkup, Wash, Battery..." onkeyup="filterServices()">
+                </div>
+                <button class="btn btn-amber fw-bold">FIND SERVICES ⚡</button>
+            </div>
+
+            <div class="d-flex gap-3 flex-wrap">
+                <a href="{% url 'marketplace' %}" class="btn btn-dark border-warning text-warning">🚗 Buy / Sell Second Hand Cars</a>
+                <a href="{% url 'parts' %}" class="btn btn-outline-light">⚙️ Auto Spares Shop</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="row g-3 mb-5">
+        <div class="col-6 col-lg-3">
+            <div class="card card-garage p-3 h-100">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="stat-icon bg-warning bg-opacity-10 text-warning">🛡️</div>
+                    <div><div class="text-muted small fw-bold">Mechanics</div><div class="fw-black small">100% Verified</div></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card card-garage p-3 h-100">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="stat-icon bg-primary bg-opacity-10 text-primary">📍</div>
+                    <div><div class="text-muted small fw-bold">Districts</div><div class="fw-black small">Local Area Match</div></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card card-garage p-3 h-100">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="stat-icon" style="background: rgba(18,179,163,0.1); color: var(--teal-deep);">💰</div>
+                    <div><div class="text-muted small fw-bold">Fixed Rates</div><div class="fw-black small">No Hidden Costs</div></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card card-garage p-3 h-100">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="stat-icon bg-danger bg-opacity-10 text-danger">🚨</div>
+                    <div><div class="text-muted small fw-bold">Breakdown</div><div class="fw-black small">24x7 Emergency</div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SERVICES + BOOKING FORM -->
+    <div class="row g-4">
+        <!-- Services List -->
+        <div class="col-lg-7">
+            <h4 class="fw-black mb-4 border-bottom pb-2">Humari Services List</h4>
+
+            <!-- Car Wash -->
+            <div class="card card-garage ticket-card mb-4 service-category">
+                <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                    <span class="fw-bold small">🧼 Car Wash & Internal Detailing</span>
+                    <span class="badge bg-warning text-dark" style="font-size: 0.6rem;">Quick Service</span>
+                </div>
+                <div class="list-group list-group-flush">
+                    {% for s in services.car_wash %}
+                    <label class="list-group-item d-flex justify-content-between align-items-center service-item" style="cursor: pointer;">
+                        <div class="d-flex align-items-center gap-3">
+                            <input type="checkbox" class="form-check-input service-checkbox"
+                                   data-category="Car Wash" data-name="{{ s.name }}" data-price="{{ s.price }}"
+                                   onchange="updateSummary()">
+                            <div>
+                                <div class="fw-bold small">{{ s.name }} <span class="badge bg-warning bg-opacity-10 text-warning" style="font-size: 0.6rem;">⏱️ {{ s.time }}</span></div>
+                                <div class="text-muted" style="font-size: 0.8rem;">{{ s.desc }}</div>
+                            </div>
+                        </div>
+                        <span class="badge bg-dark text-warning price-mono">₹{{ s.price }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Car Services -->
+            <div class="card card-garage ticket-card mb-4 service-category">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <span class="fw-bold small">🔧 Car Repairing & General Services</span>
+                    <span class="badge bg-info text-dark" style="font-size: 0.6rem;">Preventive</span>
+                </div>
+                <div class="list-group list-group-flush">
+                    {% for s in services.car_services %}
+                    <label class="list-group-item d-flex justify-content-between align-items-center service-item" style="cursor: pointer;">
+                        <div class="d-flex align-items-center gap-3">
+                            <input type="checkbox" class="form-check-input service-checkbox"
+                                   data-category="Car Services" data-name="{{ s.name }}" data-price="{{ s.price }}"
+                                   {% if s.name == 'General Checkup' %}checked{% endif %}
+                                   onchange="updateSummary()">
+                            <div>
+                                <div class="fw-bold small">{{ s.name }} <span class="badge bg-warning bg-opacity-10 text-warning" style="font-size: 0.6rem;">⏱️ {{ s.time }}</span></div>
+                                <div class="text-muted" style="font-size: 0.8rem;">{{ s.desc }}</div>
+                            </div>
+                        </div>
+                        <span class="badge bg-dark text-warning price-mono">₹{{ s.price }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Breakdown -->
+            <div class="card card-garage ticket-card mb-4 service-category">
+                <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                    <span class="fw-bold small">🚨 On-Spot Emergency Break-down (24x7)</span>
+                    <span class="badge bg-warning text-dark" style="font-size: 0.6rem;">Emergency</span>
+                </div>
+                <div class="list-group list-group-flush">
+                    {% for s in services.breakdown_services %}
+                    <label class="list-group-item d-flex justify-content-between align-items-center service-item" style="cursor: pointer;">
+                        <div class="d-flex align-items-center gap-3">
+                            <input type="checkbox" class="form-check-input service-checkbox"
+                                   data-category="Break Down" data-name="{{ s.name }}" data-price="{{ s.price }}"
+                                   onchange="updateSummary()">
+                            <div>
+                                <div class="fw-bold small">{{ s.name }}</div>
+                                <div class="text-muted" style="font-size: 0.8rem;">{{ s.desc }}</div>
+                            </div>
+                        </div>
+                        <span class="badge bg-dark text-warning price-mono">₹{{ s.price }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Custom Services -->
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="card card-garage p-3 service-item" style="cursor: pointer;">
+                        <div class="d-flex align-items-start gap-3">
+                            <input type="checkbox" class="form-check-input service-checkbox mt-1"
+                                   data-category="Denting" data-name="Dent/Paint Custom Quote" data-price="Custom"
+                                   onchange="updateSummary()">
+                            <div>
+                                <div class="fw-bold small text-warning">🎨 Denting & Painting</div>
+                                <div class="text-muted" style="font-size: 0.8rem;">{{ services.dent_paint.desc }}</div>
+                            </div>
+                        </div>
+                    </label>
+                </div>
+                <div class="col-md-6">
+                    <label class="card card-garage p-3 service-item" style="cursor: pointer;">
+                        <div class="d-flex align-items-start gap-3">
+                            <input type="checkbox" class="form-check-input service-checkbox mt-1"
+                                   data-category="Toeing" data-name="Emergency Flatbed Tow" data-price="Custom"
+                                   onchange="updateSummary()">
+                            <div>
+                                <div class="fw-bold small text-warning">🚛 Flatbed Toeing Service</div>
+                                <div class="text-muted" style="font-size: 0.8rem;">{{ services.toeing.desc }}</div>
+                            </div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Booking Form -->
+        <div class="col-lg-5">
+            <div class="card card-garage sticky-top" style="top: 88px; z-index: 1020;">
+                <div class="card-body">
+                    <h5 class="fw-black mb-1">📅 Naya Service Book Karein</h5>
+                    <p class="text-muted small mb-4">Apni details sahi bharein taaki local mechanic contact kar sake.</p>
+
+                    <form method="post" action="{% url 'create_booking' %}" id="bookingForm">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">Apna Pura Naam *</label>
+                            <input type="text" name="customer_name" class="form-control" placeholder="E.g., Ramesh Verma"
+                                   value="{{ user.first_name|default:'' }}" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">Contact Mobile (WhatsApp) *</label>
+                            <input type="tel" name="customer_contact" class="form-control" placeholder="E.g., 9001122334"
+                                   value="{{ user.contact|default:'' }}" required>
+                        </div>
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label class="form-label small fw-bold text-muted">Gadi Brand & Model *</label>
+                                <input type="text" name="car_details" class="form-control" placeholder="E.g. Swift Petrol 2018" required>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small fw-bold text-muted">City District *</label>
+                                <select name="city" class="form-select" required>
+                                    {% for c in cities %}
+                                    <option value="{{ c }}" {% if c == active_city %}selected{% endif %}>{{ c }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label class="form-label small fw-bold text-muted">Categories</label>
+                                <input type="text" id="bookCategory" name="service_category" class="form-control bg-light" readonly>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small fw-bold text-muted">Services</label>
+                                <input type="text" id="bookSubtype" name="service_subtype" class="form-control bg-light" readonly>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">Estimated Charges</label>
+                            <div class="bg-warning bg-opacity-10 border border-warning p-3 rounded d-flex justify-content-between align-items-center">
+                                <span class="fw-bold small">Total:</span>
+                                <span id="priceDisplay" class="fw-black text-warning fs-5">₹0</span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">Booking Date & Time *</label>
+                            <input type="datetime-local" name="booking_time" class="form-control" required>
+                        </div>
+
+                        <div class="alert alert-secondary small" style="font-size: 0.8rem;">
+                            ℹ️ <strong>Pay Cash/UPI to Mechanic on Work Completion.</strong> Admin verify karke mechanic assign karega.
+                        </div>
+
+                        {% if user.is_authenticated %}
+                        <button type="submit" class="btn btn-amber w-100 fw-bold py-2">📝 BOOK REPAIR SERVICE NOW</button>
+                        {% else %}
+                        <a href="{% url 'login' %}" class="btn btn-amber w-100 fw-bold py-2">🔑 LOGIN TO BOOK</a>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sticky Cart -->
+<div id="stickyCart" class="sticky-cart py-3 px-4">
+    <div class="container d-flex flex-column flex-sm-row justify-content-between align-items-center gap-3">
+        <div class="d-flex align-items-center gap-3">
+            <div class="bg-warning bg-opacity-10 text-warning p-2 rounded d-none d-sm-block">🛒</div>
+            <div>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="fw-bold text-white small" id="stickyCount">0 Services Selected</span>
+                    <span class="text-warning small fw-bold" id="stickyCity">{{ active_city }} Locked 📍</span>
+                </div>
+                <p class="text-white-50 small mb-0 text-truncate" style="max-width: 300px;" id="stickyList">No services chosen</p>
+            </div>
+        </div>
+        <div class="d-flex align-items-center gap-3">
+            <div class="text-end">
+                <div class="text-white-50" style="font-size: 0.7rem;">Estimate:</div>
+                <div class="fw-black text-warning fs-5" id="stickyTotal">₹0</div>
+            </div>
+            <button onclick="document.getElementById('bookingForm').scrollIntoView({behavior:'smooth'})" class="btn btn-amber fw-bold">⚡ BOOK NOW</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(10, 0, 0, 0);
+    document.querySelector('input[name="booking_time"]').value = tomorrow.toISOString().slice(0, 16);
+
+    function updateSummary() {
+        const checkboxes = document.querySelectorAll('.service-checkbox:checked');
+        const categories = new Set();
+        const services = [];
+        let total = 0;
+        let hasCustom = false;
+
+        checkboxes.forEach(cb => {
+            const cat = cb.dataset.category;
+            const name = cb.dataset.name;
+            const price = cb.dataset.price;
+
+            categories.add(cat);
+            services.push(`${name} (₹${price})`);
+
+            const priceNum = parseInt(price);
+            if (isNaN(priceNum)) hasCustom = true;
+            else total += priceNum;
+        });
+
+        document.getElementById('bookCategory').value = categories.size ? Array.from(categories).join(', ') : '';
+        document.getElementById('bookSubtype').value = services.length ? services.join(', ') : '';
+
+        let priceText = '₹0';
+        if (hasCustom) priceText = total > 0 ? `₹${total} + Custom` : 'Custom Estimate';
+        else priceText = `₹${total}`;
+
+        document.getElementById('priceDisplay').innerText = priceText;
+
+        const stickyCart = document.getElementById('stickyCart');
+        if (services.length > 0) {
+            stickyCart.classList.add('show');
+            document.getElementById('stickyCount').innerText = `${services.length} Services Selected`;
+            document.getElementById('stickyList').innerText = services.join(', ');
+            document.getElementById('stickyTotal').innerText = priceText;
+        } else {
+            stickyCart.classList.remove('show');
+        }
+    }
+
+    function filterServices() {
+        const query = document.getElementById('serviceSearch').value.toLowerCase();
+        document.querySelectorAll('.service-item').forEach(item => {
+            item.style.display = item.innerText.toLowerCase().includes(query) ? '' : 'none';
+        });
+        document.querySelectorAll('.service-category').forEach(card => {
+            const visible = card.querySelectorAll('.service-item:not([style*="none"])').length;
+            card.style.display = visible === 0 && query.length > 0 ? 'none' : '';
+        });
+    }
+
+    updateSummary();
+</script>
+{% endblock %}

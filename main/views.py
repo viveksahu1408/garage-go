@@ -1,0 +1,511 @@
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.db.models import Q, Sum
+from .models import (
+    User, Mechanic, Booking, MarketplaceCar, 
+    AutoPart, PartOrder, Inquiry
+)
+
+
+# ============================================================
+# HELPERS
+# ============================================================
+
+def get_active_city(request):
+    return request.session.get('garagego_city', 'Jabalpur')
+
+def set_active_city(request, city):
+    request.session['garagego_city'] = city
+
+
+def role_required(allowed_roles):
+    def decorator(view_func):
+        def wrapper(request, *args, **kwargs):
+            if not request.user.is_authenticated:
+                messages.error(request, 'Pehle login karein!')
+                return redirect('login')
+            if request.user.role not in allowed_roles:
+                messages.error(request, 'Permission nahi hai!')
+                return redirect('home')
+            return view_func(request, *args, **kwargs)
+        return wrapper
+    return decorator
+
+
+# ============================================================
+# AUTH
+# ============================================================
+
+def login_view(request):
+    if request.user.is_authenticated:
+        return redirect('home')
+    
+    if request.method == 'POST':
+        contact = request.POST.get('contact')
+        password = request.POST.get('password')
+        
+        user = authenticate(request, contact=contact, password=password)
+        
+        if user is not None:
+            login(request, user)
+            messages.success(request, f'Swagat hai, {user.first_name}!')
+            
+            if user.role == 'admin':
+                return redirect('admin_dashboard')
+            elif user.role == 'mechanic':
+                return redirect('mechanic_dashboard')
+            else:
+                return redirect('user_dashboard')
+        else:
+            messages.error(request, 'Galat Mobile ya Password!')
+    
+    return render(request, 'main/login.html')
+
+
+def register_view(request):
+    if request.user.is_authenticated:
+        return redirect('home')
+    
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        contact = request.POST.get('contact')
+        password = request.POST.get('password')
+        role = request.POST.get('role', 'user')
+        
+        if User.objects.filter(contact=contact).exists():
+            messages.error(request, 'Ye number pehle se registered hai!')
+            return render(request, 'main/register.html')
+        
+        name_parts = name.split(' ', 1)
+        first_name = name_parts[0]
+        last_name = name_parts[1] if len(name_parts) > 1 else ''
+        
+        user = User.objects.create_user(
+            username=contact,
+            contact=contact,
+            first_name=first_name,
+            last_name=last_name,
+            password=password,
+            role=role
+        )
+        
+        if role == 'mechanic':
+            shop_name = request.POST.get('shop_name')
+            city = request.POST.get('city', 'Jabalpur')
+            id_card = request.POST.get('id_card')
+            certifications = request.POST.get('certifications', '')
+            
+            if not shop_name or not city or not id_card:
+                messages.error(request, 'Mechanic ke liye Shop, City, ID Card jaruri hain!')
+                user.delete()
+                return render(request, 'main/register.html')
+            
+            Mechanic.objects.create(
+                user=user,
+                name=name,
+                contact=contact,
+                shop_name=shop_name,
+                city=city,
+                id_card=id_card,
+                certifications=[certifications] if certifications else ['ITI Certificate'],
+                status='Pending'
+            )
+            user.mechanic_status = 'Pending'
+            user.save()
+        
+        messages.success(request, 'Registration successful! Ab login karein.')
+        return redirect('login')
+    
+    return render(request, 'main/register.html')
+
+
+def logout_view(request):
+    logout(request)
+    messages.success(request, 'Logout ho gaye!')
+    return redirect('home')
+
+
+# ============================================================
+# PUBLIC PAGES
+# ============================================================
+
+def home_view(request):
+    active_city = get_active_city(request)
+    
+    services = {
+        'car_wash': [
+            {'name': 'Top Wash', 'price': 200, 'time': '30 mins', 'desc': 'Upar se badiya paani aur shampoo wash'},
+            {'name': 'Full Wash', 'price': 300, 'time': '1 hour', 'desc': 'Underbody cleaning aur internal vacuuming ke sath'},
+            {'name': 'Interior Cleaning', 'price': 100, 'time': '45 mins', 'desc': 'Seats, dashboard aur carpet ki deep polishing'},
+        ],
+        'car_services': [
+            {'name': 'General Checkup', 'price': 250, 'time': '1 hour', 'desc': 'Brakes, coolant, lights aur fluid levels ki janch'},
+            {'name': 'Full Service', 'price': 850, 'time': '4 hours', 'desc': 'Engine oil change, oil filter replacement, air filter cleaning'},
+        ],
+        'breakdown_services': [
+            {'name': 'Battery Tochan (Jump Start)', 'price': 500, 'desc': 'Agar gadi start nahi ho rahi, mechanics battery se jump start karenge'},
+            {'name': 'Puncture Service', 'price': 400, 'desc': 'On-spot tubeless/tube puncture lagana ya spare stepney badalna'},
+            {'name': 'Fuel Delivery', 'price': 500, 'desc': '₹500 flat service charge + extra petrol/diesel cost'},
+            {'name': 'Gadi Start Work', 'price': 500, 'desc': 'Bina tochan minor electrical/mechanical repair on site'},
+        ],
+        'dent_paint': {'name': 'Dent & Paint Work', 'desc': 'Body damage repair aur high-quality spray painting. Price work dekh ke decide hoga (Custom Quote).'},
+        'toeing': {'name': 'Toeing Work', 'desc': 'Gadi fassi ho toh flatbed ya crane toeing service. Brand aur distance ke hisab se rates.'},
+    }
+    
+    cities = ['Katni', 'Jabalpur', 'Satna', 'Maihar', 'Sagar', 'Damoh']
+    
+    return render(request, 'main/home.html', {
+        'services': services,
+        'cities': cities,
+        'active_city': active_city,
+    })
+
+
+def marketplace_view(request):
+    brand_filter = request.GET.get('brand', '')
+    city_filter = request.GET.get('city', '')
+    max_price = request.GET.get('max_price', '')
+    
+    cars = MarketplaceCar.objects.filter(status='Approved')
+    
+    if brand_filter:
+        cars = cars.filter(make__icontains=brand_filter)
+    if city_filter:
+        cars = cars.filter(seller_city__iexact=city_filter)
+    if max_price:
+        try:
+            cars = cars.filter(price__lte=float(max_price))
+        except ValueError:
+            pass
+    
+    return render(request, 'main/marketplace.html', {
+        'cars': cars,
+        'brand_filter': brand_filter,
+        'city_filter': city_filter,
+        'max_price': max_price,
+        'cities': ['Jabalpur', 'Katni', 'Sagar', 'Maihar'],
+    })
+
+
+def parts_view(request):
+    parts = AutoPart.objects.all()
+    return render(request, 'main/parts.html', {'parts': parts})
+
+
+# ============================================================
+# BOOKINGS
+# ============================================================
+
+@login_required
+def create_booking(request):
+    if request.method == 'POST':
+        customer_name = request.POST.get('customer_name')
+        customer_contact = request.POST.get('customer_contact')
+        car_details = request.POST.get('car_details')
+        service_category = request.POST.get('service_category')
+        service_subtype = request.POST.get('service_subtype')
+        price = request.POST.get('price', 'Quote basis')
+        city = request.POST.get('city')
+        booking_time = request.POST.get('booking_time')
+        
+        Booking.objects.create(
+            customer_name=customer_name,
+            customer_contact=customer_contact,
+            car_details=car_details,
+            service_category=service_category,
+            service_subtype=service_subtype or service_category,
+            price=price,
+            city=city,
+            booking_time=booking_time
+        )
+        
+        messages.success(request, 'Service book ho gayi! Admin verify karke mechanic assign karenge.')
+        return redirect('user_dashboard')
+    
+    return redirect('home')
+
+
+# ============================================================
+# DASHBOARDS
+# ============================================================
+
+@login_required
+def user_dashboard(request):
+    bookings = Booking.objects.filter(customer_contact=request.user.contact)
+    return render(request, 'main/user_dashboard.html', {'bookings': bookings})
+
+
+@login_required
+@role_required(['mechanic'])
+def mechanic_dashboard(request):
+    try:
+        mechanic = Mechanic.objects.get(user=request.user)
+    except Mechanic.DoesNotExist:
+        messages.error(request, 'Mechanic profile not found!')
+        return redirect('home')
+    
+    if mechanic.status != 'Active':
+        return render(request, 'main/mechanic_dashboard.html', {
+            'mechanic': mechanic,
+            'pending': True
+        })
+    
+    bookings = Booking.objects.filter(assigned_mechanic=mechanic)
+    return render(request, 'main/mechanic_dashboard.html', {
+        'mechanic': mechanic,
+        'bookings': bookings,
+        'active_city': get_active_city(request)
+    })
+
+
+@login_required
+@role_required(['admin'])
+def admin_dashboard(request):
+    total_commission = MarketplaceCar.objects.filter(status='Sold').aggregate(
+        total=Sum('commission_earned')
+    )['total'] or 0
+    
+    pending_mechanics = Mechanic.objects.filter(status='Pending').count()
+    pending_cars = MarketplaceCar.objects.filter(status='Pending').count()
+    active_bookings = Booking.objects.exclude(
+        status__in=['Completed', 'Rejected']
+    ).count()
+    total_orders = PartOrder.objects.count()
+    
+    context = {
+        'stats': {
+            'total_commission': total_commission,
+            'pending_mechanics': pending_mechanics,
+            'pending_cars': pending_cars,
+            'active_bookings': active_bookings,
+            'total_orders': total_orders,
+        },
+        'mechanics': Mechanic.objects.all(),
+        'bookings': Booking.objects.all(),
+        'cars': MarketplaceCar.objects.all(),
+        'orders': PartOrder.objects.all(),
+        'inquiries': Inquiry.objects.all(),
+        'parts': AutoPart.objects.all(),
+    }
+    return render(request, 'main/admin_dashboard.html', context)
+
+
+# ============================================================
+# ACTIONS
+# ============================================================
+
+@login_required
+def update_booking_status(request, booking_id):
+    if request.user.role != 'mechanic':
+        messages.error(request, 'Access Denied!')
+        return redirect('home')
+    
+    booking = get_object_or_404(Booking, id=booking_id)
+    mechanic = get_object_or_404(Mechanic, user=request.user)
+    
+    if booking.assigned_mechanic != mechanic:
+        messages.error(request, 'Sirf apne assigned kaam ka status badal sakte hain!')
+        return redirect('mechanic_dashboard')
+    
+    status = request.POST.get('status')
+    if status in ['Accepted', 'Work in Progress', 'Completed', 'Rejected']:
+        booking.status = status
+        booking.save()
+        messages.success(request, f'Status changed to {status}!')
+    
+    return redirect('mechanic_dashboard')
+
+
+@login_required
+@role_required(['admin'])
+def approve_mechanic(request, mechanic_id):
+    mechanic = get_object_or_404(Mechanic, id=mechanic_id)
+    status = request.POST.get('status')
+    
+    if status in ['Active', 'Rejected']:
+        mechanic.status = status
+        mechanic.save()
+        mechanic.user.mechanic_status = status
+        mechanic.user.save()
+        messages.success(request, f'Mechanic {status} kar diya!')
+    
+    return redirect('admin_dashboard')
+
+
+@login_required
+@role_required(['admin'])
+def approve_car(request, car_id):
+    car = get_object_or_404(MarketplaceCar, id=car_id)
+    status = request.POST.get('status')
+    
+    if status in ['Approved', 'Rejected', 'Sold']:
+        car.status = status
+        if status == 'Sold':
+            car.commission_earned = car.price * 0.02
+        car.save()
+        messages.success(request, f'Car {status} kar diya!')
+    
+    return redirect('admin_dashboard')
+
+
+@login_required
+@role_required(['admin'])
+def assign_booking(request, booking_id):
+    booking = get_object_or_404(Booking, id=booking_id)
+    mechanic_id = request.POST.get('mechanic_id')
+    mechanic = get_object_or_404(Mechanic, id=mechanic_id)
+    
+    if mechanic.status != 'Active':
+        messages.error(request, 'Inactive mechanic ko assign nahi kar sakte!')
+        return redirect('admin_dashboard')
+    
+    if booking.city.lower() != mechanic.city.lower():
+        messages.error(request, f'Mechanic {mechanic.city} me hai, booking {booking.city} ki hai!')
+        return redirect('admin_dashboard')
+    
+    booking.assigned_mechanic = mechanic
+    booking.status = 'Assigned'
+    booking.save()
+    messages.success(request, 'Mechanic assign ho gaya!')
+    return redirect('admin_dashboard')
+
+
+@login_required
+@role_required(['admin'])
+def update_order_status(request, order_id):
+    order = get_object_or_404(PartOrder, id=order_id)
+    status = request.POST.get('status')
+    
+    if status in ['Processing', 'Shipped', 'Delivered']:
+        order.status = status
+        order.save()
+        messages.success(request, f'Order status: {status}')
+    
+    return redirect('admin_dashboard')
+
+
+@login_required
+@role_required(['admin'])
+def add_part(request):
+    if request.method == 'POST':
+        AutoPart.objects.create(
+            name=request.POST.get('name'),
+            description=request.POST.get('description', ''),
+            type=request.POST.get('type', 'New'),
+            compatibility=request.POST.get('compatibility', 'Universal'),
+            price=request.POST.get('price'),
+            quantity=request.POST.get('quantity'),
+            photo_url=request.POST.get('photo_url', '')
+        )
+        messages.success(request, 'Naya part add ho gaya!')
+    
+    return redirect('admin_dashboard')
+
+
+# ============================================================
+# MARKETPLACE
+# ============================================================
+
+@login_required
+def sell_car(request):
+    if request.method == 'POST':
+        MarketplaceCar.objects.create(
+            seller_name=request.POST.get('seller_name', request.user.first_name),
+            seller_contact=request.POST.get('seller_contact', request.user.contact),
+            seller_alt_contact=request.POST.get('seller_alt_contact', ''),
+            seller_city=request.POST.get('seller_city', ''),
+            seller_address=request.POST.get('seller_address', ''),
+            make=request.POST.get('make'),
+            model=request.POST.get('model'),
+            variant=request.POST.get('variant', ''),
+            year=request.POST.get('year', 2018),
+            reg_year=request.POST.get('reg_year'),
+            kms=request.POST.get('kms', 0),
+            price=request.POST.get('price', 0),
+            fuel_type=request.POST.get('fuel_type', 'Petrol'),
+            transmission=request.POST.get('transmission', 'Manual'),
+            owners_count=request.POST.get('owners_count', 1),
+            reg_state_rto=request.POST.get('reg_state_rto', ''),
+            description=request.POST.get('description', ''),
+            insurance_status=request.POST.get('insurance_status', 'Expired'),
+            insurance_type=request.POST.get('insurance_type', ''),
+            insurance_expiry=request.POST.get('insurance_expiry') or None,
+            noc_status=request.POST.get('noc_status', 'Yes'),
+            fitness_validity=request.POST.get('fitness_validity', ''),
+            accidental_history=request.POST.get('accidental_history', 'No'),
+            accidental_details=request.POST.get('accidental_details', ''),
+            photo_url=request.POST.get('photo_url', ''),
+            photo_urls=request.POST.getlist('photo_urls'),
+            video_link=request.POST.get('video_link', ''),
+            video_urls=request.POST.getlist('video_urls'),
+            listed_by=request.user,
+            status='Pending'
+        )
+        messages.success(request, 'Car listing submit ho gayi! Verification ke baad live hogi.')
+        return redirect('marketplace')
+    
+    return redirect('marketplace')
+
+
+@login_required
+def car_inquiry(request, car_id):
+    car = get_object_or_404(MarketplaceCar, id=car_id)
+    
+    if request.method == 'POST':
+        Inquiry.objects.create(
+            car=car,
+            car_title=f"{car.make} {car.model} ({car.year})",
+            buyer_name=request.POST.get('buyer_name', request.user.first_name),
+            buyer_contact=request.POST.get('buyer_contact', request.user.contact),
+            buyer_message=request.POST.get('buyer_message', 'Interested in buying.')
+        )
+        messages.success(request, 'Inquiry bhej di gayi!')
+    
+    return redirect('marketplace')
+
+
+# ============================================================
+# PARTS ORDER
+# ============================================================
+
+@login_required
+def order_part(request, part_id):
+    part = get_object_or_404(AutoPart, id=part_id)
+    
+    if request.method == 'POST':
+        quantity = int(request.POST.get('quantity', 1))
+        buyer_address = request.POST.get('buyer_address')
+        
+        if part.quantity < quantity:
+            messages.error(request, f'Sirf {part.quantity} pieces stock me hain!')
+            return redirect('parts')
+        
+        part.quantity -= quantity
+        part.save()
+        
+        PartOrder.objects.create(
+            buyer_name=request.user.first_name,
+            buyer_contact=request.user.contact,
+            buyer_address=buyer_address,
+            part=part,
+            part_name=part.name,
+            quantity=quantity,
+            total_price=part.price * quantity
+        )
+        
+        messages.success(request, 'COD order placed! 1 hafte me delivery.')
+    
+    return redirect('parts')
+
+
+# ============================================================
+# CITY SELECTOR
+# ============================================================
+
+def set_city(request):
+    city = request.POST.get('city', 'Jabalpur')
+    set_active_city(request, city)
+    messages.success(request, f'City updated to {city}!')
+    return redirect(request.META.get('HTTP_REFERER', 'home'))

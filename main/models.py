@@ -1,0 +1,235 @@
+from django.db import models
+from django.contrib.auth.models import AbstractUser
+
+
+class User(AbstractUser):
+    """Custom User with phone-based login"""
+    
+    ROLE_CHOICES = [
+        ('admin', 'Supreme Admin'),
+        ('mechanic', 'Mechanic'),
+        ('user', 'Customer'),
+    ]
+    
+    contact = models.CharField(max_length=15, unique=True, blank=True, null=True)
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='user')
+    mechanic_status = models.CharField(
+        max_length=20,
+        choices=[('Pending', 'Pending'), ('Active', 'Active'), ('Rejected', 'Rejected')],
+        default='Pending',
+        blank=True
+    )
+    
+    USERNAME_FIELD = 'contact'
+    REQUIRED_FIELDS = ['username']
+    
+    def __str__(self):
+        return f"{self.get_full_name() or self.username} ({self.contact})"
+    
+    @property
+    def is_admin(self):
+        return self.role == 'admin'
+    
+    @property
+    def is_mechanic(self):
+        return self.role == 'mechanic'
+
+
+class Mechanic(models.Model):
+    """Mechanic/Workshop profile"""
+    
+    STATUS_CHOICES = [
+        ('Pending', 'Pending'),
+        ('Active', 'Active'),
+        ('Rejected', 'Rejected'),
+    ]
+    
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='mechanic_profile')
+    name = models.CharField(max_length=100)
+    contact = models.CharField(max_length=15)
+    shop_name = models.CharField(max_length=200)
+    shop_photo = models.URLField(max_length=500, blank=True)
+    certifications = models.JSONField(default=list, blank=True)
+    id_card = models.CharField(max_length=200)
+    city = models.CharField(max_length=50)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"{self.name} - {self.shop_name} ({self.city})"
+    
+    class Meta:
+        ordering = ['-created_at']
+
+
+class Booking(models.Model):
+    """Service booking"""
+    
+    STATUS_CHOICES = [
+        ('Pending Assignment', 'Pending Assignment'),
+        ('Assigned', 'Assigned'),
+        ('Accepted', 'Accepted'),
+        ('Work in Progress', 'Work in Progress'),
+        ('Completed', 'Completed'),
+        ('Rejected', 'Rejected'),
+    ]
+    
+    customer_name = models.CharField(max_length=100)
+    customer_contact = models.CharField(max_length=15)
+    car_details = models.CharField(max_length=200)
+    service_category = models.CharField(max_length=100)
+    service_subtype = models.CharField(max_length=300)
+    price = models.CharField(max_length=100, default='Quote basis')
+    city = models.CharField(max_length=50)
+    booking_time = models.DateTimeField()
+    status = models.CharField(max_length=30, choices=STATUS_CHOICES, default='Pending Assignment')
+    assigned_mechanic = models.ForeignKey(
+        Mechanic, on_delete=models.SET_NULL, null=True, blank=True, related_name='bookings'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"#{self.id} - {self.service_category} for {self.customer_name}"
+    
+    class Meta:
+        ordering = ['-created_at']
+
+
+class MarketplaceCar(models.Model):
+    """Used car listing"""
+    
+    STATUS_CHOICES = [
+        ('Pending', 'Pending'),
+        ('Approved', 'Approved'),
+        ('Rejected', 'Rejected'),
+        ('Sold', 'Sold'),
+    ]
+    
+    FUEL_CHOICES = [
+        ('Petrol', 'Petrol'),
+        ('Diesel', 'Diesel'),
+        ('CNG', 'CNG'),
+        ('EV', 'EV'),
+    ]
+    
+    TRANSMISSION_CHOICES = [
+        ('Manual', 'Manual'),
+        ('Automatic', 'Automatic'),
+    ]
+    
+    # Seller info
+    seller_name = models.CharField(max_length=100)
+    seller_contact = models.CharField(max_length=15)
+    seller_alt_contact = models.CharField(max_length=15, blank=True)
+    seller_city = models.CharField(max_length=50, blank=True)
+    seller_address = models.TextField(blank=True)
+    
+    # Car details
+    make = models.CharField(max_length=100)
+    model = models.CharField(max_length=100)
+    variant = models.CharField(max_length=100, blank=True)
+    year = models.PositiveIntegerField()
+    reg_year = models.PositiveIntegerField(null=True, blank=True)
+    kms = models.PositiveIntegerField()
+    price = models.DecimalField(max_digits=12, decimal_places=2)
+    fuel_type = models.CharField(max_length=20, choices=FUEL_CHOICES, default='Petrol')
+    transmission = models.CharField(max_length=20, choices=TRANSMISSION_CHOICES, default='Manual')
+    owners_count = models.PositiveIntegerField(default=1)
+    reg_state_rto = models.CharField(max_length=100, blank=True)
+    description = models.TextField()
+    
+    # Insurance & Legal
+    insurance_status = models.CharField(max_length=20, choices=[('Active', 'Active'), ('Expired', 'Expired')], default='Expired')
+    insurance_type = models.CharField(max_length=100, blank=True)
+    insurance_expiry = models.DateField(null=True, blank=True)
+    noc_status = models.CharField(max_length=20, choices=[('Yes', 'Yes'), ('No', 'No')], default='Yes')
+    fitness_validity = models.CharField(max_length=100, blank=True)
+    accidental_history = models.CharField(max_length=20, choices=[('Yes', 'Yes'), ('No', 'No')], default='No')
+    accidental_details = models.TextField(blank=True)
+    
+    # Media
+    photo_url = models.URLField(max_length=500)
+    photo_urls = models.JSONField(default=list, blank=True)
+    video_link = models.URLField(max_length=500, blank=True)
+    video_urls = models.JSONField(default=list, blank=True)
+    
+    # Status
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
+    commission_earned = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    
+    listed_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='listed_cars', null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"{self.make} {self.model} ({self.year}) - ₹{self.price}"
+    
+    class Meta:
+        ordering = ['-created_at']
+
+
+class AutoPart(models.Model):
+    """Auto spare parts"""
+    
+    TYPE_CHOICES = [
+        ('New', 'New'),
+        ('Used', 'Used'),
+    ]
+    
+    name = models.CharField(max_length=200)
+    description = models.TextField()
+    type = models.CharField(max_length=20, choices=TYPE_CHOICES, default='New')
+    compatibility = models.CharField(max_length=200)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    quantity = models.PositiveIntegerField(default=0)
+    photo_url = models.URLField(max_length=500, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"{self.name} - ₹{self.price}"
+    
+    class Meta:
+        ordering = ['-created_at']
+
+
+class PartOrder(models.Model):
+    """Spare parts COD order"""
+    
+    STATUS_CHOICES = [
+        ('Processing', 'Processing'),
+        ('Shipped', 'Shipped'),
+        ('Delivered', 'Delivered'),
+    ]
+    
+    buyer_name = models.CharField(max_length=100)
+    buyer_contact = models.CharField(max_length=15)
+    buyer_address = models.TextField()
+    part = models.ForeignKey(AutoPart, on_delete=models.CASCADE, related_name='orders')
+    part_name = models.CharField(max_length=200)
+    quantity = models.PositiveIntegerField(default=1)
+    total_price = models.DecimalField(max_digits=10, decimal_places=2)
+    order_date = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Processing')
+    
+    def __str__(self):
+        return f"Order #{self.id} - {self.part_name} x{self.quantity}"
+    
+    class Meta:
+        ordering = ['-order_date']
+
+
+class Inquiry(models.Model):
+    """Car buyer inquiry/lead"""
+    
+    car = models.ForeignKey(MarketplaceCar, on_delete=models.CASCADE, related_name='inquiries')
+    car_title = models.CharField(max_length=200)
+    buyer_name = models.CharField(max_length=100)
+    buyer_contact = models.CharField(max_length=15)
+    buyer_message = models.TextField()
+    date = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"Inquiry for {self.car_title} by {self.buyer_name}"
+    
+    class Meta:
+        ordering = ['-date']

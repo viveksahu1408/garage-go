@@ -1,0 +1,229 @@
+{% extends 'base.html' %}
+{% block title %}Used Cars Marketplace - GarageGo{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Banner -->
+    <div class="card bg-warning border-0 mb-4">
+        <div class="card-body p-4 d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+            <div>
+                <h4 class="fw-black mb-1">🚗 Verified Used Cars Marketplace</h4>
+                <p class="mb-0 small">Har second hand gadi local mechanics dwara pre-inspected hai. Platform charge sirf 2% commission.</p>
+            </div>
+            {% if user.is_authenticated %}
+            <button class="btn btn-dark fw-bold" data-bs-toggle="modal" data-bs-target="#sellCarModal">➕ APNI CAR BECHEIN</button>
+            {% else %}
+            <a href="{% url 'login' %}" class="btn btn-dark fw-bold">➕ LOGIN TO SELL</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Filters -->
+        <div class="col-lg-3">
+            <div class="card card-garage p-3">
+                <h6 class="fw-bold mb-3 border-bottom pb-2">⚡ Filter Listings</h6>
+                <form method="get">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted">Brand</label>
+                        <select name="brand" class="form-select" onchange="this.form.submit()">
+                            <option value="">All Brands</option>
+                            <option value="Maruti" {% if brand_filter == 'Maruti' %}selected{% endif %}>Maruti Suzuki</option>
+                            <option value="Hyundai" {% if brand_filter == 'Hyundai' %}selected{% endif %}>Hyundai</option>
+                            <option value="Honda" {% if brand_filter == 'Honda' %}selected{% endif %}>Honda</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted">District</label>
+                        <select name="city" class="form-select" onchange="this.form.submit()">
+                            <option value="">All Districts</option>
+                            {% for c in cities %}
+                            <option value="{{ c }}" {% if city_filter == c %}selected{% endif %}>{{ c }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted">Max Price</label>
+                        <input type="number" name="max_price" class="form-control" placeholder="E.g., 500000" value="{{ max_price }}" onchange="this.form.submit()">
+                    </div>
+                    <a href="{% url 'marketplace' %}" class="btn btn-outline-secondary btn-sm w-100">Clear Filters</a>
+                </form>
+                
+                <div class="alert alert-warning small mt-3" style="font-size: 0.75rem;">
+                    💡 <strong>GarageGo Promise:</strong> Deal final hone par GarageGo executive paperwork me madad karenge.
+                </div>
+            </div>
+        </div>
+
+        <!-- Car Grid -->
+        <div class="col-lg-9">
+            <div class="row g-4">
+                {% for car in cars %}
+                <div class="col-md-6 col-xl-4">
+                    <div class="card card-garage h-100">
+                        <div class="position-relative">
+                            <img src="{{ car.photo_url }}" class="card-img-top" style="height: 180px; object-fit: cover;" alt="{{ car.make }}">
+                            <span class="position-absolute top-0 end-0 m-2 badge bg-dark bg-opacity-75 text-warning">✅ Verified</span>
+                            <span class="position-absolute bottom-0 start-0 m-2 badge bg-dark text-white">₹{{ car.price|floatformat:0 }}</span>
+                        </div>
+                        <div class="card-body">
+                            <h6 class="fw-black small text-uppercase">{{ car.make }} - {{ car.model }}</h6>
+                            <p class="text-muted small mb-2">Year: {{ car.year }} | {{ car.kms|floatformat:0 }} KMs</p>
+                            <p class="text-muted small" style="font-size: 0.8rem; line-height: 1.5;">{{ car.description|truncatewords:20 }}</p>
+                            
+                            {% if car.video_link %}
+                            <a href="{{ car.video_link }}" target="_blank" class="small fw-bold text-decoration-none">🎥 Walkaround Video ↗</a>
+                            {% endif %}
+                            
+                            <div class="d-grid mt-3">
+                                <button class="btn btn-dark btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#inquiryModal{{ car.id }}">📞 INQUIRE / INTERESTED</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Inquiry Modal -->
+                <div class="modal fade" id="inquiryModal{{ car.id }}" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header bg-dark text-white">
+                                <h6 class="modal-title fw-bold">📞 Buy Inquiry - {{ car.make }} {{ car.model }}</h6>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                            </div>
+                            <form method="post" action="{% url 'car_inquiry' car.id %}">
+                                {% csrf_token %}
+                                <div class="modal-body">
+                                    <div class="alert alert-warning small">Gadi: {{ car.make }} {{ car.model }} (₹{{ car.price|floatformat:0 }})</div>
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold">Apna Naam *</label>
+                                        <input type="text" name="buyer_name" class="form-control" value="{{ user.first_name|default:'' }}" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold">Contact Phone *</label>
+                                        <input type="tel" name="buyer_contact" class="form-control" value="{{ user.contact|default:'' }}" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold">Message / Doubts</label>
+                                        <textarea name="buyer_message" class="form-control" rows="3" placeholder="Test drive chahiye..."></textarea>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="submit" class="btn btn-dark fw-bold">💌 SUBMIT CALLBACK REQUEST</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12 text-center py-5">
+                    <p class="text-muted">Marketplace me abhi koi certified gaadi ready nahi hai.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sell Car Modal -->
+{% if user.is_authenticated %}
+<div class="modal fade" id="sellCarModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h6 class="modal-title fw-bold">🚗 Apni Car Sell List Karein</h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'sell_car' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Full Name *</label>
+                            <input type="text" name="seller_name" class="form-control" value="{{ user.first_name }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Primary Number *</label>
+                            <input type="tel" name="seller_contact" class="form-control" value="{{ user.contact }}" readonly>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Alt Contact</label>
+                            <input type="tel" name="seller_alt_contact" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">City *</label>
+                            <select name="seller_city" class="form-select" required>
+                                <option value="Jabalpur">Jabalpur</option>
+                                <option value="Katni">Katni</option>
+                                <option value="Satna">Satna</option>
+                                <option value="Maihar">Maihar</option>
+                                <option value="Sagar">Sagar</option>
+                                <option value="Damoh">Damoh</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Make *</label>
+                            <input type="text" name="make" class="form-control" placeholder="Maruti Suzuki" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Model *</label>
+                            <input type="text" name="model" class="form-control" placeholder="Swift" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Variant</label>
+                            <input type="text" name="variant" class="form-control" placeholder="VXI Petrol">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold">Year *</label>
+                            <input type="number" name="year" class="form-control" placeholder="2018" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold">KMs *</label>
+                            <input type="number" name="kms" class="form-control" placeholder="45000" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold">Price (₹) *</label>
+                            <input type="number" name="price" class="form-control" placeholder="350000" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold">Owners</label>
+                            <input type="number" name="owners_count" class="form-control" value="1">
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Fuel Type</label>
+                            <select name="fuel_type" class="form-select">
+                                <option value="Petrol">Petrol</option>
+                                <option value="Diesel">Diesel</option>
+                                <option value="CNG">CNG</option>
+                                <option value="EV">EV</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Transmission</label>
+                            <select name="transmission" class="form-select">
+                                <option value="Manual">Manual</option>
+                                <option value="Automatic">Automatic</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-12">
+                            <label class="form-label small fw-bold">Description *</label>
+                            <textarea name="description" class="form-control" rows="2" placeholder="Condition details..." required></textarea>
+                        </div>
+                        
+                        <div class="col-12">
+                            <label class="form-label small fw-bold">Photo URL *</label>
+                            <input type="url" name="photo_url" class="form-control" value="https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&q=80&w=600" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-amber fw-bold">🚗 SUBMIT FOR APPROVAL</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
