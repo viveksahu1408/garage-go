@@ -7,7 +7,7 @@ from .models import (
     User, Mechanic, Booking, MarketplaceCar, 
     AutoPart, PartOrder, Inquiry
 )
-
+from .models import ServiceCategory,City
 
 # ============================================================
 # HELPERS
@@ -131,36 +131,25 @@ def logout_view(request):
 # PUBLIC PAGES
 # ============================================================
 
+from django.shortcuts import render
+from .models import ServiceCategory, City # City model import kiya
+
+
 def home_view(request):
     active_city = get_active_city(request)
     
-    services = {
-        'car_wash': [
-            {'name': 'Top Wash', 'price': 200, 'time': '30 mins', 'desc': 'Upar se badiya paani aur shampoo wash'},
-            {'name': 'Full Wash', 'price': 300, 'time': '1 hour', 'desc': 'Underbody cleaning aur internal vacuuming ke sath'},
-            {'name': 'Interior Cleaning', 'price': 100, 'time': '45 mins', 'desc': 'Seats, dashboard aur carpet ki deep polishing'},
-        ],
-        'car_services': [
-            {'name': 'General Checkup', 'price': 250, 'time': '1 hour', 'desc': 'Brakes, coolant, lights aur fluid levels ki janch'},
-            {'name': 'Full Service', 'price': 850, 'time': '4 hours', 'desc': 'Engine oil change, oil filter replacement, air filter cleaning'},
-        ],
-        'breakdown_services': [
-            {'name': 'Battery Tochan (Jump Start)', 'price': 500, 'desc': 'Agar gadi start nahi ho rahi, mechanics battery se jump start karenge'},
-            {'name': 'Puncture Service', 'price': 400, 'desc': 'On-spot tubeless/tube puncture lagana ya spare stepney badalna'},
-            {'name': 'Fuel Delivery', 'price': 500, 'desc': '₹500 flat service charge + extra petrol/diesel cost'},
-            {'name': 'Gadi Start Work', 'price': 500, 'desc': 'Bina tochan minor electrical/mechanical repair on site'},
-        ],
-        'dent_paint': {'name': 'Dent & Paint Work', 'desc': 'Body damage repair aur high-quality spray painting. Price work dekh ke decide hoga (Custom Quote).'},
-        'toeing': {'name': 'Toeing Work', 'desc': 'Gadi fassi ho toh flatbed ya crane toeing service. Brand aur distance ke hisab se rates.'},
-    }
+    # Active cities database se fetch ho rahi hain
+    db_cities = City.objects.filter(is_active=True).order_by('name')
     
-    cities = ['Katni', 'Jabalpur', 'Satna', 'Maihar', 'Sagar', 'Damoh']
+    # Saari categories unke packages ke sath pass ho rahi hain template loops ko handle karne ke liye
+    all_categories = ServiceCategory.objects.prefetch_related('packages').all()
     
     return render(request, 'main/home.html', {
-        'services': services,
-        'cities': cities,
+        'categories': all_categories,
+        'cities': db_cities,
         'active_city': active_city,
     })
+
 
 
 def marketplace_view(request):
@@ -498,7 +487,6 @@ def order_part(request, part_id):
         messages.success(request, 'COD order placed! 1 hafte me delivery.')
     
     return redirect('parts')
-
 
 # ============================================================
 # CITY SELECTOR

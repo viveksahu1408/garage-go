@@ -233,3 +233,36 @@ class Inquiry(models.Model):
     
     class Meta:
         ordering = ['-date']
+
+class ServiceCategory(models.Model):
+    name = models.CharField(max_length=100, unique=True, help_text="E.g., Car Wash, Car Services, Breakdown Services")
+    slug = models.SlugField(max_length=100, unique=True, help_text="E.g., car_wash, car_services (Lowercase without spaces)")
+    description = models.TextField(blank=True, null=True, help_text="Optional overall category description")
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name_plural = "Service Categories"
+
+class ServicePackage(models.Model):
+    category = models.ForeignKey(ServiceCategory, on_delete=models.CASCADE, related_name='packages')
+    name = models.CharField(max_length=150, help_text="E.g., Top Wash, General Checkup")
+    price = models.IntegerField(default=0, help_text="Put 0 if it is a custom quote base")
+    time_duration = models.CharField(max_length=50, blank=True, null=True, help_text="E.g., 30 mins, 4 hours")
+    description = models.TextField(help_text="Detailed description of what is included")
+    is_custom_quote = models.BooleanField(default=False, help_text="Check this for Dent/Paint or Towing where price varies work-to-work")
+
+    def __str__(self):
+        return f"{self.category.name} - {self.name}"     
+
+    
+class City(models.Model):
+    name = models.CharField(max_length=100, unique=True, help_text="Shahar ya kasbe ka naam (e.g., Katni, Jabalpur)")
+    is_active = models.BooleanField(default=True, help_text="Kya is shahar me service live rakhni hai?")
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name_plural = "Cities"       

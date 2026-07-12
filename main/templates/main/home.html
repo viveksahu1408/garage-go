@@ -1,249 +1,565 @@
 {% extends 'base.html' %}
-{% block title %}Home - GarageGo Services{% endblock %}
+{% block title %}Home - GarageGo{% endblock %}
+
+{% block extra_css %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+    h1, h5, h6, .navbar-brand, .fw-bold, .fw-800 {
+        font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    }
+    body, p, .form-control, .form-select, .btn {
+        font-family: 'Inter', system-ui, sans-serif;
+    }
+
+    .hero-wrap { padding: 2.5rem 0 1.5rem; }
+    .hero-badge {
+        display: inline-block;
+        background: var(--primary-light);
+        color: var(--primary-dark);
+        font-weight: 700;
+        font-size: 0.75rem;
+        padding: 6px 14px;
+        border-radius: 999px;
+        margin-bottom: 14px;
+        font-family: 'Inter', system-ui, sans-serif;
+    }
+    .hero-wrap h1 {
+        font-weight: 800;
+        font-size: clamp(1.9rem, 4.2vw, 2.9rem);
+        line-height: 1.18;
+        letter-spacing: -0.01em;
+    }
+    .hero-wrap h1 span { color: var(--primary); }
+    .hero-wrap p.lead { color: var(--muted); font-size: 1.05rem; font-family: 'Inter', system-ui, sans-serif; }
+
+    .gg-search {
+        background: #fff;
+        border-radius: 999px;
+        box-shadow: 0 4px 14px rgba(91,63,217,0.08);
+        border: 1px solid #ECE9F7;
+        padding: 4px;
+    }
+    .gg-search input { border: none; background: transparent; box-shadow: none; }
+    .gg-search input:focus { box-shadow: none; }
+    .gg-search .btn { border-radius: 999px; }
+
+    .hero-car-wrap {
+        display: flex; align-items: center; justify-content: center;
+        height: 100%;
+        position: relative;
+    }
+    .hero-car-wrap::before {
+        content: '';
+        position: absolute;
+        width: 320px; height: 320px;
+        background: radial-gradient(circle, var(--primary-light) 0%, rgba(237,233,251,0) 70%);
+        border-radius: 50%;
+        z-index: 0;
+    }
+    .hero-car-wrap img {
+        width: 100%; max-width: 470px; height: auto;
+        position: relative; z-index: 1;
+        filter: drop-shadow(0 20px 30px rgba(31,33,48,0.18));
+    }
+
+    /* Category quick links */
+    .quick-cat {
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 4px 14px rgba(31,33,48,0.05);
+        text-decoration: none;
+        color: var(--text);
+        padding: 16px 8px;
+        text-align: center;
+        display: block;
+        transition: transform .15s ease, box-shadow .15s ease;
+    }
+    .quick-cat:hover { transform: translateY(-3px); box-shadow: 0 10px 22px rgba(31,33,48,0.09); color: var(--text); }
+    .quick-cat .qc-icon {
+        width: 42px; height: 42px;
+        border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 8px;
+        font-size: 1.2rem;
+    }
+    .quick-cat .qc-label { font-weight: 700; font-size: 0.82rem; display: block; }
+    .quick-cat .qc-sub { font-size: 0.68rem; color: var(--muted); }
+
+    /* Stats row */
+    .stats-row {
+        background: #fff;
+        border-radius: var(--radius);
+        box-shadow: 0 4px 14px rgba(31,33,48,0.05);
+        padding: 1.2rem 0.5rem;
+    }
+    .stats-row .stat { text-align: center; }
+    .stats-row .stat .num { font-weight: 800; font-size: 1.15rem; color: var(--text); }
+    .stats-row .stat .lbl { font-size: 0.72rem; color: var(--muted); }
+
+    /* How it works */
+    .steps-row { padding: 0.5rem 0; }
+    .step-item { text-align: center; }
+    .step-item .step-icon {
+        width: 50px; height: 50px;
+        border-radius: 50%;
+        background: var(--primary-light);
+        color: var(--primary-dark);
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 10px;
+        font-size: 1.2rem;
+        font-weight: 800;
+    }
+    .step-item .step-label { font-weight: 700; font-size: 0.85rem; }
+
+    /* Service categories (booking section) */
+    .service-category {
+        border: none;
+        border-radius: var(--radius);
+        box-shadow: 0 4px 16px rgba(31,33,48,0.05);
+        overflow: hidden;
+    }
+    .service-category .card-header {
+        background: #fff;
+        border: none;
+        display: flex; align-items: center; gap: 10px;
+        padding: 16px 18px 8px;
+        font-weight: 700;
+        color: var(--text);
+    }
+    .service-category .card-header .cat-icon {
+        width: 38px; height: 38px;
+        border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        background: var(--primary-light);
+        font-size: 1.1rem;
+    }
+    .service-item { border: none; padding: 12px 18px; transition: background .15s ease; }
+    .service-item:hover { background: var(--bg); }
+    .service-checkbox { width: 1.1em; height: 1.1em; border: 2px solid #cbd5e1; cursor: pointer; }
+    .service-checkbox:checked { background-color: var(--primary); border-color: var(--primary); }
+    .badge-price {
+        background: var(--primary-light);
+        color: var(--primary-dark);
+        font-weight: 700;
+        border-radius: 999px;
+        padding: 5px 12px;
+        font-size: 0.85rem;
+    }
+
+    #mainBookingCardForm { border: none; border-radius: var(--radius); box-shadow: 0 8px 24px rgba(31,33,48,0.08); }
+    #mainBookingCardForm .form-control, #mainBookingCardForm .form-select {
+        border-radius: 999px; background: var(--bg); border: 1px solid #ECE9F7; padding: 10px 16px;
+    }
+    #mainBookingCardForm .form-control:focus, #mainBookingCardForm .form-select:focus {
+        border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light);
+    }
+    .total-box { background: var(--primary-light); border-radius: var(--radius); padding: 14px 18px; }
+    .total-box #priceDisplay { color: var(--primary-dark); font-weight: 800; font-size: 1.2rem; }
+
+    #stickyCart {
+        background: #fff; border: none !important;
+        border-radius: 20px 20px 0 0;
+        box-shadow: 0 -8px 24px rgba(31,33,48,0.1);
+    }
+    #stickyCart #stickyCount {
+        background: var(--primary-light); color: var(--primary-dark);
+        border-radius: 999px; padding: 4px 12px; font-weight: 700; font-size: 0.8rem;
+    }
+    #stickyCart #stickyTotal { font-weight: 800; color: var(--text); }
+
+    @media (max-width: 767px) {
+        .hero-car-wrap { margin-top: 1.5rem; }
+        .quick-cat { padding: 12px 4px; }
+    }
+
+    /* ===== Mobile app view ===== */
+    .app-mobile-view { padding: 1rem 0.9rem 0.5rem; }
+
+    .city-pill {
+        border-radius: 999px !important;
+        font-weight: 600;
+        font-size: 0.72rem !important;
+        padding: 4px 10px !important;
+        background: var(--primary-light) !important;
+        color: var(--primary-dark) !important;
+        border: none !important;
+        width: auto !important;
+    }
+
+    .promo-banner {
+        background: linear-gradient(135deg, #1e0b4f 0%, var(--primary) 100%);
+        border-radius: 20px;
+        padding: 18px;
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        cursor: pointer;
+        box-shadow: 0 10px 24px rgba(91,63,217,0.25);
+    }
+    .promo-banner .promo-text { position: relative; z-index: 2; max-width: 62%; }
+    .promo-badge {
+        display: inline-block;
+        background: rgba(255,255,255,0.18);
+        color: #fff;
+        font-size: 0.62rem;
+        font-weight: 700;
+        padding: 3px 10px;
+        border-radius: 999px;
+        margin-bottom: 8px;
+    }
+    .promo-banner .promo-img {
+        width: 62%;
+        max-width: 180px;
+        object-fit: contain;
+        filter: drop-shadow(0 8px 12px rgba(0,0,0,0.35));
+    }
+
+    .app-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+    }
+    .app-grid-item {
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 4px 10px rgba(31,33,48,0.05);
+        text-decoration: none;
+        color: var(--text);
+        text-align: center;
+        padding: 12px 4px;
+        display: block;
+    }
+    .app-grid-item:active { transform: scale(0.96); }
+    .app-grid-icon {
+        width: 34px; height: 34px;
+        border-radius: 10px;
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 6px;
+        font-size: 1rem;
+    }
+    .app-grid-label { font-size: 0.68rem; font-weight: 700; display: block; }
+
+    .popular-car-card {
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 4px 12px rgba(31,33,48,0.05);
+        padding: 10px;
+        display: flex;
+        gap: 12px;
+        align-items: center;
+    }
+    .popular-car-card img {
+        width: 90px; height: 68px;
+        object-fit: cover;
+        border-radius: 12px;
+    }
+
+    /* ===== Mobile bottom tab bar ===== */
+    .bottom-tab-nav {
+        position: fixed;
+        bottom: 0; left: 0; right: 0;
+        background: #fff;
+        box-shadow: 0 -4px 16px rgba(31,33,48,0.08);
+        border-top-left-radius: 18px;
+        border-top-right-radius: 18px;
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        padding: 8px 0;
+        z-index: 1060;
+    }
+    .bottom-tab-nav .tab-item {
+        text-decoration: none;
+        color: var(--muted);
+        font-size: 0.65rem;
+        font-weight: 700;
+        text-align: center;
+    }
+    .bottom-tab-nav .tab-item.active { color: var(--primary); }
+    .bottom-tab-nav .tab-icon { display: block; font-size: 1.15rem; margin-bottom: 2px; }
+
+    .bottom-spacer { height: 40px; }
+    @media (max-width: 767px) {
+        .bottom-spacer { height: 78px; }
+        #stickyCart { bottom: 62px !important; border-radius: 16px !important; margin: 0 8px; }
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container">
-    <!-- HERO -->
-    <div class="hero-section p-5 mb-4">
-        <div class="hazard-corner"></div>
-        <div style="position:relative; z-index:1;">
-            <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-20 mb-3" style="font-family: var(--font-mono); letter-spacing:.02em;">✨ Jabalpur Division Premium Car Care Network</span>
-            <h1 class="fw-black mb-3">
-                Apni Car ki Service Book Karein <span class="text-warning">Chutkiyon Mein!</span>
-            </h1>
-            <p class="text-white-50 mb-4 col-lg-8">
-                Katni, Jabalpur, Satna, Maihar, Sagar aur Damoh ke verified, experienced local mechanics se best repair aur maintenance paayein.
-            </p>
 
-            <div class="d-flex gap-2 mb-4 col-lg-6">
-                <div class="input-group">
-                    <span class="input-group-text bg-dark border-secondary text-white">🔍</span>
-                    <input type="text" id="serviceSearch" class="form-control bg-dark border-secondary text-white" placeholder="E.g., General Checkup, Wash, Battery..." onkeyup="filterServices()">
-                </div>
-                <button class="btn btn-amber fw-bold">FIND SERVICES ⚡</button>
-            </div>
+<!-- ============ MOBILE APP VIEW (visible only below md breakpoint) ============ -->
+<div class="d-md-none app-mobile-view">
 
-            <div class="d-flex gap-3 flex-wrap">
-                <a href="{% url 'marketplace' %}" class="btn btn-dark border-warning text-warning">🚗 Buy / Sell Second Hand Cars</a>
-                <a href="{% url 'parts' %}" class="btn btn-outline-light">⚙️ Auto Spares Shop</a>
-            </div>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h5 class="mb-0 fw-bold">Hello, {{ user.first_name|default:"Guest" }} 👋</h5>
+            <p class="text-muted small mb-0">What do you need today?</p>
+        </div>
+        <form method="post" action="{% url 'set_city' %}">
+            {% csrf_token %}
+            <select name="city" class="form-select form-select-sm city-pill" onchange="this.form.submit()">
+                {% for c in cities %}
+                <option value="{{ c.name }}" {% if c.name == active_city %}selected{% endif %}>{{ c.name }}</option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+
+    <div class="promo-banner mb-3" onclick="document.getElementById('servicesContainerBlock').scrollIntoView({behavior:'smooth'})">
+        <div class="promo-text">
+            <span class="promo-badge">150+ Points Check</span>
+            <h6 class="fw-bold text-white mb-1">Book Car Service</h6>
+            <p class="text-white-50 small mb-2">Verified mechanics, fixed rates.</p>
+            <span class="btn btn-light btn-sm text-primary fw-bold rounded-pill px-3">Book Now</span>
+        </div>
+        <img src="https://i.postimg.cc/B6CPXbnh/Untitled-design-1-removebg-preview.png" class="promo-img" alt="Car">
+    </div>
+
+    <div class="app-grid mb-4">
+        <a href="{% url 'marketplace' %}" class="app-grid-item">
+            <span class="app-grid-icon" style="background:#FFF1E8;">🚗</span>
+            <span class="app-grid-label">Buy Car</span>
+        </a>
+        <a href="{% url 'marketplace' %}?action=sell" class="app-grid-item">
+            <span class="app-grid-icon" style="background:var(--primary-light);">📦</span>
+            <span class="app-grid-label">Sell Car</span>
+        </a>
+        <a href="#servicesContainerBlock" class="app-grid-item">
+            <span class="app-grid-icon" style="background:#E6F9F6;">🧼</span>
+            <span class="app-grid-label">Car Wash</span>
+        </a>
+        <a href="#servicesContainerBlock" class="app-grid-item">
+            <span class="app-grid-icon" style="background:#FFF1E8;">🛠️</span>
+            <span class="app-grid-label">Service</span>
+        </a>
+        <a href="#servicesContainerBlock" class="app-grid-item">
+            <span class="app-grid-icon" style="background:var(--primary-light);">🚛</span>
+            <span class="app-grid-label">Towing</span>
+        </a>
+        <a href="{% url 'parts' %}" class="app-grid-item">
+            <span class="app-grid-icon" style="background:#E6F9F6;">⚙️</span>
+            <span class="app-grid-label">Spare Parts</span>
+        </a>
+        {% if user.is_authenticated %}
+        <a href="{% url 'user_dashboard' %}" class="app-grid-item">
+            <span class="app-grid-icon" style="background:#FFF1E8;">📂</span>
+            <span class="app-grid-label">My Bookings</span>
+        </a>
+        {% else %}
+        <a href="{% url 'login' %}" class="app-grid-item">
+            <span class="app-grid-icon" style="background:#FFF1E8;">📂</span>
+            <span class="app-grid-label">My Bookings</span>
+        </a>
+        {% endif %}
+        <a href="#servicesContainerBlock" class="app-grid-item">
+            <span class="app-grid-icon" style="background:var(--primary-light);">•••</span>
+            <span class="app-grid-label">More</span>
+        </a>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <h6 class="fw-bold mb-0">Popular Cars</h6>
+        <a href="{% url 'marketplace' %}" class="small fw-bold text-decoration-none" style="color:var(--primary);">View All</a>
+    </div>
+    <div class="popular-car-card mb-4">
+        <img src="https://www.freepnglogos.com/uploads/bmw-png/bmw-reviews-and-rating-motor-trend-1.png" alt="Maruti Swift">
+        <div class="flex-grow-1">
+            <div class="fw-bold small">Maruti Swift VXI</div>
+            <div class="text-muted" style="font-size:0.72rem;">2019 • Petrol • 45K km</div>
+            <div class="fw-bold" style="color:var(--primary);">₹ 5,25,000</div>
         </div>
     </div>
 
-    <!-- STATS -->
-    <div class="row g-3 mb-5">
-        <div class="col-6 col-lg-3">
-            <div class="card card-garage p-3 h-100">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="stat-icon bg-warning bg-opacity-10 text-warning">🛡️</div>
-                    <div><div class="text-muted small fw-bold">Mechanics</div><div class="fw-black small">100% Verified</div></div>
-                </div>
+</div>
+
+<!-- ============ DESKTOP / WEB VIEW (hidden on mobile) ============ -->
+<div class="d-none d-md-block">
+
+<!-- HERO -->
+<div class="container hero-wrap">
+    <div class="row align-items-center g-4">
+        <div class="col-lg-6">
+            <span class="hero-badge">Namaste, {{ user.first_name|default:"Guest" }} 👋</span>
+            <h1>Jabalpur Division ka <span>Sabse Bharosemand</span> Auto Care Platform</h1>
+            <p class="lead">Verified local mechanics se car wash, service, breakdown help aur towing — sab ek jagah, fixed rate par.</p>
+
+            <div class="gg-search d-flex align-items-center mt-4">
+                <input type="text" id="serviceSearch" class="form-control" placeholder="Search services, packages..." onkeyup="filterServices()">
+                <button type="button" class="btn btn-primary" onclick="document.getElementById('servicesContainerBlock').scrollIntoView({behavior:'smooth'})">Search</button>
             </div>
         </div>
-        <div class="col-6 col-lg-3">
-            <div class="card card-garage p-3 h-100">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="stat-icon bg-primary bg-opacity-10 text-primary">📍</div>
-                    <div><div class="text-muted small fw-bold">Districts</div><div class="fw-black small">Local Area Match</div></div>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-lg-3">
-            <div class="card card-garage p-3 h-100">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="stat-icon" style="background: rgba(18,179,163,0.1); color: var(--teal-deep);">💰</div>
-                    <div><div class="text-muted small fw-bold">Fixed Rates</div><div class="fw-black small">No Hidden Costs</div></div>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-lg-3">
-            <div class="card card-garage p-3 h-100">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="stat-icon bg-danger bg-opacity-10 text-danger">🚨</div>
-                    <div><div class="text-muted small fw-bold">Breakdown</div><div class="fw-black small">24x7 Emergency</div></div>
-                </div>
+        <div class="col-lg-6">
+            <div class="hero-car-wrap">
+                <img src="https://i.postimg.cc/B6CPXbnh/Untitled-design-1-removebg-preview.png" alt="Car">
             </div>
         </div>
     </div>
+</div>
 
-    <!-- SERVICES + BOOKING FORM -->
-    <div class="row g-4">
-        <!-- Services List -->
+<!-- QUICK CATEGORIES -->
+<div class="container mb-4">
+    <div class="row g-2 g-md-3 row-cols-3 row-cols-md-6">
+        <div class="col">
+            <a href="{% url 'marketplace' %}" class="quick-cat">
+                <span class="qc-icon" style="background:#FFF1E8;">🚗</span>
+                <span class="qc-label">Buy Car</span>
+                <span class="qc-sub">Find best deals</span>
+            </a>
+        </div>
+        <div class="col">
+            <a href="{% url 'marketplace' %}?action=sell" class="quick-cat">
+                <span class="qc-icon" style="background:var(--primary-light);">📦</span>
+                <span class="qc-label">Sell Car</span>
+                <span class="qc-sub">Sell in few steps</span>
+            </a>
+        </div>
+        <div class="col">
+            <a href="#servicesContainerBlock" class="quick-cat">
+                <span class="qc-icon" style="background:#E6F9F6;">🧼</span>
+                <span class="qc-label">Car Wash</span>
+                <span class="qc-sub">Detailing</span>
+            </a>
+        </div>
+        <div class="col">
+            <a href="#servicesContainerBlock" class="quick-cat">
+                <span class="qc-icon" style="background:#FFF1E8;">🛠️</span>
+                <span class="qc-label">Car Service</span>
+                <span class="qc-sub">Book service</span>
+            </a>
+        </div>
+        <div class="col">
+            <a href="#servicesContainerBlock" class="quick-cat">
+                <span class="qc-icon" style="background:var(--primary-light);">🚛</span>
+                <span class="qc-label">Towing</span>
+                <span class="qc-sub">24x7</span>
+            </a>
+        </div>
+        <div class="col">
+            <a href="{% url 'parts' %}" class="quick-cat">
+                <span class="qc-icon" style="background:#E6F9F6;">⚙️</span>
+                <span class="qc-label">Spare Parts</span>
+                <span class="qc-sub">Genuine parts</span>
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- STATS -->
+<div class="container mb-4">
+    <div class="stats-row row g-3">
+        <div class="col-4 col-md-2 stat"><div class="num">25K+</div><div class="lbl">Happy Customers</div></div>
+        <div class="col-4 col-md-2 stat"><div class="num">15K+</div><div class="lbl">Services Done</div></div>
+        <div class="col-4 col-md-2 stat"><div class="num">1K+</div><div class="lbl">Verified Mechanics</div></div>
+        <div class="col-6 col-md-3 stat"><div class="num">6 Districts</div><div class="lbl">Jabalpur Division</div></div>
+        <div class="col-6 col-md-3 stat"><div class="num">24x7</div><div class="lbl">Emergency Support</div></div>
+    </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<div class="container mb-5">
+    <h6 class="fw-bold text-muted mb-3">HOW IT WORKS</h6>
+    <div class="row steps-row g-3">
+        <div class="col-6 col-md-3 step-item">
+            <div class="step-icon">1</div>
+            <div class="step-label">Choose Service</div>
+        </div>
+        <div class="col-6 col-md-3 step-item">
+            <div class="step-icon">2</div>
+            <div class="step-label">Enter Details</div>
+        </div>
+        <div class="col-6 col-md-3 step-item">
+            <div class="step-icon">3</div>
+            <div class="step-label">Confirm Booking</div>
+        </div>
+        <div class="col-6 col-md-3 step-item">
+            <div class="step-icon">4</div>
+            <div class="step-label">Mechanic Assigned</div>
+        </div>
+    </div>
+</div>
+
+</div>
+<!-- ============ END DESKTOP / WEB VIEW ============ -->
+
+<!-- SERVICES + BOOKING (shared by both mobile & desktop) -->
+<div class="container" id="servicesContainerBlock">
+    <div class="row">
         <div class="col-lg-7">
-            <h4 class="fw-black mb-4 border-bottom pb-2">Humari Services List</h4>
-
-            <!-- Car Wash -->
-            <div class="card card-garage ticket-card mb-4 service-category">
-                <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
-                    <span class="fw-bold small">🧼 Car Wash & Internal Detailing</span>
-                    <span class="badge bg-warning text-dark" style="font-size: 0.6rem;">Quick Service</span>
+            {% for category in categories %}
+            <div class="card mb-3 service-category">
+                <div class="card-header">
+                    <span class="cat-icon">{% cycle '🧼' '🛠️' '🚨' '🎨' '🚛' '⚙️' %}</span>
+                    {{ category.name }}
                 </div>
                 <div class="list-group list-group-flush">
-                    {% for s in services.car_wash %}
+                    {% for s in category.packages.all %}
                     <label class="list-group-item d-flex justify-content-between align-items-center service-item" style="cursor: pointer;">
-                        <div class="d-flex align-items-center gap-3">
+                        <div class="d-flex gap-2">
                             <input type="checkbox" class="form-check-input service-checkbox"
-                                   data-category="Car Wash" data-name="{{ s.name }}" data-price="{{ s.price }}"
+                                   data-category="{{ category.name }}" data-name="{{ s.name }}"
+                                   data-price="{% if s.is_custom_quote %}Custom{% else %}{{ s.price }}{% endif %}"
                                    onchange="updateSummary()">
-                            <div>
-                                <div class="fw-bold small">{{ s.name }} <span class="badge bg-warning bg-opacity-10 text-warning" style="font-size: 0.6rem;">⏱️ {{ s.time }}</span></div>
-                                <div class="text-muted" style="font-size: 0.8rem;">{{ s.desc }}</div>
-                            </div>
+                            <div>{{ s.name }}<div class="text-muted small">{{ s.description }}</div></div>
                         </div>
-                        <span class="badge bg-dark text-warning price-mono">₹{{ s.price }}</span>
+                        <span class="badge-price">{% if s.is_custom_quote %}Custom Quote{% else %}₹{{ s.price }}{% endif %}</span>
                     </label>
+                    {% empty %}
+                    <p class="text-muted small p-3 mb-0">No active packages listed in this category.</p>
                     {% endfor %}
                 </div>
             </div>
-
-            <!-- Car Services -->
-            <div class="card card-garage ticket-card mb-4 service-category">
-                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                    <span class="fw-bold small">🔧 Car Repairing & General Services</span>
-                    <span class="badge bg-info text-dark" style="font-size: 0.6rem;">Preventive</span>
-                </div>
-                <div class="list-group list-group-flush">
-                    {% for s in services.car_services %}
-                    <label class="list-group-item d-flex justify-content-between align-items-center service-item" style="cursor: pointer;">
-                        <div class="d-flex align-items-center gap-3">
-                            <input type="checkbox" class="form-check-input service-checkbox"
-                                   data-category="Car Services" data-name="{{ s.name }}" data-price="{{ s.price }}"
-                                   {% if s.name == 'General Checkup' %}checked{% endif %}
-                                   onchange="updateSummary()">
-                            <div>
-                                <div class="fw-bold small">{{ s.name }} <span class="badge bg-warning bg-opacity-10 text-warning" style="font-size: 0.6rem;">⏱️ {{ s.time }}</span></div>
-                                <div class="text-muted" style="font-size: 0.8rem;">{{ s.desc }}</div>
-                            </div>
-                        </div>
-                        <span class="badge bg-dark text-warning price-mono">₹{{ s.price }}</span>
-                    </label>
-                    {% endfor %}
-                </div>
-            </div>
-
-            <!-- Breakdown -->
-            <div class="card card-garage ticket-card mb-4 service-category">
-                <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
-                    <span class="fw-bold small">🚨 On-Spot Emergency Break-down (24x7)</span>
-                    <span class="badge bg-warning text-dark" style="font-size: 0.6rem;">Emergency</span>
-                </div>
-                <div class="list-group list-group-flush">
-                    {% for s in services.breakdown_services %}
-                    <label class="list-group-item d-flex justify-content-between align-items-center service-item" style="cursor: pointer;">
-                        <div class="d-flex align-items-center gap-3">
-                            <input type="checkbox" class="form-check-input service-checkbox"
-                                   data-category="Break Down" data-name="{{ s.name }}" data-price="{{ s.price }}"
-                                   onchange="updateSummary()">
-                            <div>
-                                <div class="fw-bold small">{{ s.name }}</div>
-                                <div class="text-muted" style="font-size: 0.8rem;">{{ s.desc }}</div>
-                            </div>
-                        </div>
-                        <span class="badge bg-dark text-warning price-mono">₹{{ s.price }}</span>
-                    </label>
-                    {% endfor %}
-                </div>
-            </div>
-
-            <!-- Custom Services -->
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <label class="card card-garage p-3 service-item" style="cursor: pointer;">
-                        <div class="d-flex align-items-start gap-3">
-                            <input type="checkbox" class="form-check-input service-checkbox mt-1"
-                                   data-category="Denting" data-name="Dent/Paint Custom Quote" data-price="Custom"
-                                   onchange="updateSummary()">
-                            <div>
-                                <div class="fw-bold small text-warning">🎨 Denting & Painting</div>
-                                <div class="text-muted" style="font-size: 0.8rem;">{{ services.dent_paint.desc }}</div>
-                            </div>
-                        </div>
-                    </label>
-                </div>
-                <div class="col-md-6">
-                    <label class="card card-garage p-3 service-item" style="cursor: pointer;">
-                        <div class="d-flex align-items-start gap-3">
-                            <input type="checkbox" class="form-check-input service-checkbox mt-1"
-                                   data-category="Toeing" data-name="Emergency Flatbed Tow" data-price="Custom"
-                                   onchange="updateSummary()">
-                            <div>
-                                <div class="fw-bold small text-warning">🚛 Flatbed Toeing Service</div>
-                                <div class="text-muted" style="font-size: 0.8rem;">{{ services.toeing.desc }}</div>
-                            </div>
-                        </div>
-                    </label>
-                </div>
-            </div>
+            {% empty %}
+            <div class="alert alert-info">No service categories active from Admin Dashboard yet.</div>
+            {% endfor %}
         </div>
 
-        <!-- Booking Form -->
         <div class="col-lg-5">
-            <div class="card card-garage sticky-top" style="top: 88px; z-index: 1020;">
-                <div class="card-body">
-                    <h5 class="fw-black mb-1">📅 Naya Service Book Karein</h5>
-                    <p class="text-muted small mb-4">Apni details sahi bharein taaki local mechanic contact kar sake.</p>
-
+            <div class="card" id="mainBookingCardForm">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-3">Service Book Karein</h5>
                     <form method="post" action="{% url 'create_booking' %}" id="bookingForm">
                         {% csrf_token %}
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold text-muted">Apna Pura Naam *</label>
-                            <input type="text" name="customer_name" class="form-control" placeholder="E.g., Ramesh Verma"
-                                   value="{{ user.first_name|default:'' }}" required>
-                        </div>
+                        <input type="hidden" id="bookCategory" name="service_category">
+                        <input type="hidden" id="bookSubtype" name="service_subtype">
 
                         <div class="mb-3">
-                            <label class="form-label small fw-bold text-muted">Contact Mobile (WhatsApp) *</label>
-                            <input type="tel" name="customer_contact" class="form-control" placeholder="E.g., 9001122334"
-                                   value="{{ user.contact|default:'' }}" required>
+                            <label class="form-label small fw-bold text-muted">Naam *</label>
+                            <input type="text" name="customer_name" class="form-control" value="{{ user.first_name|default:'' }}" required>
                         </div>
-
-                        <div class="row g-2 mb-3">
-                            <div class="col-6">
-                                <label class="form-label small fw-bold text-muted">Gadi Brand & Model *</label>
-                                <input type="text" name="car_details" class="form-control" placeholder="E.g. Swift Petrol 2018" required>
-                            </div>
-                            <div class="col-6">
-                                <label class="form-label small fw-bold text-muted">City District *</label>
-                                <select name="city" class="form-select" required>
-                                    {% for c in cities %}
-                                    <option value="{{ c }}" {% if c == active_city %}selected{% endif %}>{{ c }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="row g-2 mb-3">
-                            <div class="col-6">
-                                <label class="form-label small fw-bold text-muted">Categories</label>
-                                <input type="text" id="bookCategory" name="service_category" class="form-control bg-light" readonly>
-                            </div>
-                            <div class="col-6">
-                                <label class="form-label small fw-bold text-muted">Services</label>
-                                <input type="text" id="bookSubtype" name="service_subtype" class="form-control bg-light" readonly>
-                            </div>
-                        </div>
-
                         <div class="mb-3">
-                            <label class="form-label small fw-bold text-muted">Estimated Charges</label>
-                            <div class="bg-warning bg-opacity-10 border border-warning p-3 rounded d-flex justify-content-between align-items-center">
-                                <span class="fw-bold small">Total:</span>
-                                <span id="priceDisplay" class="fw-black text-warning fs-5">₹0</span>
-                            </div>
+                            <label class="form-label small fw-bold text-muted">Mobile *</label>
+                            <input type="tel" name="customer_contact" class="form-control" value="{{ user.contact|default:'' }}" required>
                         </div>
-
                         <div class="mb-3">
-                            <label class="form-label small fw-bold text-muted">Booking Date & Time *</label>
+                            <label class="form-label small fw-bold text-muted">Gadi Brand & Model *</label>
+                            <input type="text" name="car_details" class="form-control" placeholder="e.g. Maruti Swift 2019" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">City *</label>
+                            <select name="city" class="form-select" required>
+                                {% for c in cities %}
+                                <option value="{{ c.name }}" {% if c.name == active_city %}selected{% endif %}>{{ c.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3 total-box d-flex justify-content-between align-items-center">
+                            <span class="fw-bold text-muted small">Total:</span>
+                            <span id="priceDisplay">₹0</span>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">Date & Time *</label>
                             <input type="datetime-local" name="booking_time" class="form-control" required>
                         </div>
 
-                        <div class="alert alert-secondary small" style="font-size: 0.8rem;">
-                            ℹ️ <strong>Pay Cash/UPI to Mechanic on Work Completion.</strong> Admin verify karke mechanic assign karega.
-                        </div>
-
                         {% if user.is_authenticated %}
-                        <button type="submit" class="btn btn-amber w-100 fw-bold py-2">📝 BOOK REPAIR SERVICE NOW</button>
+                        <button type="submit" class="btn btn-primary w-100">Book Now</button>
                         {% else %}
-                        <a href="{% url 'login' %}" class="btn btn-amber w-100 fw-bold py-2">🔑 LOGIN TO BOOK</a>
+                        <a href="{% url 'login' %}" class="btn btn-primary w-100">Login to Book</a>
                         {% endif %}
                     </form>
                 </div>
@@ -252,88 +568,69 @@
     </div>
 </div>
 
-<!-- Sticky Cart -->
-<div id="stickyCart" class="sticky-cart py-3 px-4">
-    <div class="container d-flex flex-column flex-sm-row justify-content-between align-items-center gap-3">
-        <div class="d-flex align-items-center gap-3">
-            <div class="bg-warning bg-opacity-10 text-warning p-2 rounded d-none d-sm-block">🛒</div>
-            <div>
-                <div class="d-flex align-items-center gap-2">
-                    <span class="fw-bold text-white small" id="stickyCount">0 Services Selected</span>
-                    <span class="text-warning small fw-bold" id="stickyCity">{{ active_city }} Locked 📍</span>
-                </div>
-                <p class="text-white-50 small mb-0 text-truncate" style="max-width: 300px;" id="stickyList">No services chosen</p>
-            </div>
+<div class="bottom-spacer"></div>
+
+<div id="stickyCart" class="py-3 px-4 d-none" style="position: fixed; bottom: 0; left: 0; right: 0; z-index: 1050;">
+    <div class="container d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center gap-2">
+            <span id="stickyCount">0 selected</span>
+            <span id="stickyTotal">₹0</span>
         </div>
-        <div class="d-flex align-items-center gap-3">
-            <div class="text-end">
-                <div class="text-white-50" style="font-size: 0.7rem;">Estimate:</div>
-                <div class="fw-black text-warning fs-5" id="stickyTotal">₹0</div>
-            </div>
-            <button onclick="document.getElementById('bookingForm').scrollIntoView({behavior:'smooth'})" class="btn btn-amber fw-bold">⚡ BOOK NOW</button>
-        </div>
+        <button onclick="document.getElementById('mainBookingCardForm').scrollIntoView({behavior:'smooth'})" class="btn btn-primary btn-sm">Proceed to Form</button>
     </div>
 </div>
+
+<!-- MOBILE BOTTOM TAB BAR -->
+<nav class="bottom-tab-nav d-md-none">
+    <a href="{% url 'home' %}" class="tab-item active">
+        <span class="tab-icon">🏠</span>Home
+    </a>
+    <a href="{% if user.is_authenticated %}{% url 'user_dashboard' %}{% else %}{% url 'login' %}{% endif %}" class="tab-item">
+        <span class="tab-icon">📅</span>Bookings
+    </a>
+    <a href="{% url 'marketplace' %}?action=sell" class="tab-item">
+        <span class="tab-icon">🚗</span>Sell Car
+    </a>
+    <a href="{% if user.is_authenticated %}{% url 'user_dashboard' %}{% else %}{% url 'login' %}{% endif %}" class="tab-item">
+        <span class="tab-icon">👤</span>Profile
+    </a>
+</nav>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    tomorrow.setHours(10, 0, 0, 0);
-    document.querySelector('input[name="booking_time"]').value = tomorrow.toISOString().slice(0, 16);
+    document.querySelector('input[name="booking_time"]').value = new Date(Date.now() + 86400000).toISOString().slice(0, 16);
 
     function updateSummary() {
-        const checkboxes = document.querySelectorAll('.service-checkbox:checked');
-        const categories = new Set();
-        const services = [];
-        let total = 0;
-        let hasCustom = false;
+        const boxes = document.querySelectorAll('.service-checkbox:checked');
+        const cats = new Set(), items = [];
+        let total = 0, hasCustom = false;
 
-        checkboxes.forEach(cb => {
-            const cat = cb.dataset.category;
-            const name = cb.dataset.name;
-            const price = cb.dataset.price;
-
-            categories.add(cat);
-            services.push(`${name} (₹${price})`);
-
-            const priceNum = parseInt(price);
-            if (isNaN(priceNum)) hasCustom = true;
-            else total += priceNum;
+        boxes.forEach(cb => {
+            cats.add(cb.dataset.category);
+            items.push(`${cb.dataset.name} (₹${cb.dataset.price})`);
+            const n = parseInt(cb.dataset.price);
+            isNaN(n) ? hasCustom = true : total += n;
         });
 
-        document.getElementById('bookCategory').value = categories.size ? Array.from(categories).join(', ') : '';
-        document.getElementById('bookSubtype').value = services.length ? services.join(', ') : '';
+        document.getElementById('bookCategory').value = [...cats].join(', ');
+        document.getElementById('bookSubtype').value = items.join(', ');
 
-        let priceText = '₹0';
-        if (hasCustom) priceText = total > 0 ? `₹${total} + Custom` : 'Custom Estimate';
-        else priceText = `₹${total}`;
-
+        const priceText = hasCustom ? (total > 0 ? `₹${total} + Custom` : 'Custom Estimate') : `₹${total}`;
         document.getElementById('priceDisplay').innerText = priceText;
 
-        const stickyCart = document.getElementById('stickyCart');
-        if (services.length > 0) {
-            stickyCart.classList.add('show');
-            document.getElementById('stickyCount').innerText = `${services.length} Services Selected`;
-            document.getElementById('stickyList').innerText = services.join(', ');
-            document.getElementById('stickyTotal').innerText = priceText;
-        } else {
-            stickyCart.classList.remove('show');
-        }
+        const cart = document.getElementById('stickyCart');
+        cart.classList.toggle('d-none', items.length === 0);
+        document.getElementById('stickyCount').innerText = `${items.length} selected`;
+        document.getElementById('stickyTotal').innerText = priceText;
     }
 
     function filterServices() {
-        const query = document.getElementById('serviceSearch').value.toLowerCase();
-        document.querySelectorAll('.service-item').forEach(item => {
-            item.style.display = item.innerText.toLowerCase().includes(query) ? '' : 'none';
-        });
-        document.querySelectorAll('.service-category').forEach(card => {
-            const visible = card.querySelectorAll('.service-item:not([style*="none"])').length;
-            card.style.display = visible === 0 && query.length > 0 ? 'none' : '';
+        const q = document.getElementById('serviceSearch').value.toLowerCase();
+        document.querySelectorAll('.service-item').forEach(i => i.style.display = i.innerText.toLowerCase().includes(q) ? '' : 'none');
+        document.querySelectorAll('.service-category').forEach(c => {
+            c.style.display = (c.querySelectorAll('.service-item:not([style*="none"])').length === 0 && q) ? 'none' : '';
         });
     }
-
-    updateSummary();
 </script>
 {% endblock %}

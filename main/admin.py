@@ -1,6 +1,8 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from .models import User, Mechanic, Booking, MarketplaceCar, AutoPart, PartOrder, Inquiry
+from .models import ServiceCategory, ServicePackage,City
+
 
 
 @admin.register(User)
@@ -58,3 +60,25 @@ class PartOrderAdmin(admin.ModelAdmin):
 class InquiryAdmin(admin.ModelAdmin):
     list_display = ['car_title', 'buyer_name', 'buyer_contact', 'date']
     search_fields = ['buyer_name', 'buyer_contact', 'car_title']
+
+class ServicePackageInline(admin.TabularInline):
+    model = ServicePackage
+    extra = 1
+
+@admin.register(ServiceCategory)
+class ServiceCategoryAdmin(admin.ModelAdmin):
+    list_display = ('name', 'slug')
+    prepopulated_fields = {'slug': ('name',)}
+    inlines = [ServicePackageInline]
+
+@admin.register(ServicePackage)
+class ServicePackageAdmin(admin.ModelAdmin):
+    list_display = ('name', 'category', 'price', 'time_duration', 'is_custom_quote')
+    list_filter = ('category', 'is_custom_quote')
+    search_fields = ('name', 'description')    
+
+@admin.register(City)
+class CityAdmin(admin.ModelAdmin):
+    list_display = ('name', 'is_active')
+    list_filter = ('is_active',)
+    search_fields = ('name',)    
