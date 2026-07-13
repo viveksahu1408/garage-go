@@ -5,9 +5,10 @@ from django.contrib import messages
 from django.db.models import Q, Sum
 from .models import (
     User, Mechanic, Booking, MarketplaceCar, 
-    AutoPart, PartOrder, Inquiry
+    AutoPart, PartOrder, Inquiry, ServiceCategory, City
 )
-from .models import ServiceCategory,City
+# Naye tables explicitly import kar rahe hain file handling ke liye
+from .models import CarPhoto, CarVideo 
 
 # ============================================================
 # HELPERS
@@ -131,10 +132,6 @@ def logout_view(request):
 # PUBLIC PAGES
 # ============================================================
 
-from django.shortcuts import render
-from .models import ServiceCategory, City # City model import kiya
-
-
 def home_view(request):
     active_city = get_active_city(request)
     
@@ -151,13 +148,13 @@ def home_view(request):
     })
 
 
-
 def marketplace_view(request):
     brand_filter = request.GET.get('brand', '')
     city_filter = request.GET.get('city', '')
     max_price = request.GET.get('max_price', '')
     
-    cars = MarketplaceCar.objects.filter(status='Approved')
+    # Prefetch add kiya taaki uploaded child files optimized perform karein
+    cars = MarketplaceCar.objects.filter(status='Approved').prefetch_related('photos', 'videos')
     
     if brand_filter:
         cars = cars.filter(make__icontains=brand_filter)
@@ -168,13 +165,16 @@ def marketplace_view(request):
             cars = cars.filter(price__lte=float(max_price))
         except ValueError:
             pass
+            
+    # Dynamic Database Cities query loop
+    db_cities = City.objects.filter(is_active=True).order_by('name')
     
     return render(request, 'main/marketplace.html', {
         'cars': cars,
         'brand_filter': brand_filter,
         'city_filter': city_filter,
         'max_price': max_price,
-        'cities': ['Jabalpur', 'Katni', 'Sagar', 'Maihar'],
+        'cities': db_cities,  # Ab static list array hatakar dynamic variable inject kar diya hai
     })
 
 
@@ -394,13 +394,26 @@ def add_part(request):
 
 
 # ============================================================
-# MARKETPLACE
+# MARKETPLACE (UPDATED FOR FILE UPLOADS)
 # ============================================================
 
 @login_required
 def sell_car(request):
     if request.method == 'POST':
-        MarketplaceCar.objects.create(
+        # Files ko lists me capture karo
+        photos = request.FILES.getlist('photos')
+        videos = request.FILES.getlist('videos')
+
+        # Backend checks for size/limits safety
+        if len(photos) > 10:
+            messages.error(request, 'Bhai, 10 se zyada photos upload nahi kar sakte!')
+            return redirect('marketplace')
+        if len(videos) > 4:
+            messages.error(request, 'Bhai, 4 se zyada videos upload nahi kar sakte!')
+            return redirect('marketplace')
+
+        # Baseline details initialize karo
+        car = MarketplaceCar.objects.create(
             seller_name=request.POST.get('seller_name', request.user.first_name),
             seller_contact=request.POST.get('seller_contact', request.user.contact),
             seller_alt_contact=request.POST.get('seller_alt_contact', ''),
@@ -410,7 +423,7 @@ def sell_car(request):
             model=request.POST.get('model'),
             variant=request.POST.get('variant', ''),
             year=request.POST.get('year', 2018),
-            reg_year=request.POST.get('reg_year'),
+            reg_year=request.POST.get('reg_year') or None,
             kms=request.POST.get('kms', 0),
             price=request.POST.get('price', 0),
             fuel_type=request.POST.get('fuel_type', 'Petrol'),
@@ -425,13 +438,17 @@ def sell_car(request):
             fitness_validity=request.POST.get('fitness_validity', ''),
             accidental_history=request.POST.get('accidental_history', 'No'),
             accidental_details=request.POST.get('accidental_details', ''),
-            photo_url=request.POST.get('photo_url', ''),
-            photo_urls=request.POST.getlist('photo_urls'),
-            video_link=request.POST.get('video_link', ''),
-            video_urls=request.POST.getlist('video_urls'),
             listed_by=request.user,
             status='Pending'
         )
+
+        # Uploaded actual files ko related models me loop karke create karo
+        for img in photos:
+            CarPhoto.objects.create(car=car, image=img)
+
+        for vid in videos:
+            CarVideo.objects.create(car=car, video=vid)
+
         messages.success(request, 'Car listing submit ho gayi! Verification ke baad live hogi.')
         return redirect('marketplace')
     
@@ -497,3 +514,15 @@ def set_city(request):
     set_active_city(request, city)
     messages.success(request, f'City updated to {city}!')
     return redirect(request.META.get('HTTP_REFERER', 'home'))
+
+def car_detail_view(request, car_id):
+    # Approved ya Pending dono ko dekhne ka access (Admin/Owner filter handle karne ke liye simple template helper)
+    car = get_object_or_404(MarketplaceCar.objects.prefetch_related('photos', 'videos'), id=car_id)
+    
+    # Dynamic cities list filter options/footer ke liye agar chahiye ho
+    db_cities = City.objects.filter(is_active=True).order_by('name')
+    
+    return render(request, 'main/car_detail.html', {
+        'car': car,
+        'cities': db_cities
+    })

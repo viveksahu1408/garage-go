@@ -18,8 +18,22 @@
         </div>
     </div>
 
+    <!-- Django Messages Popups -->
+    {% if messages %}
+    <div class="row">
+        <div class="col-12">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
     <div class="row g-4">
-        <!-- Filters -->
+        <!-- Filters Sidebar -->
         <div class="col-lg-3">
             <div class="card card-garage p-3">
                 <h6 class="fw-bold mb-3 border-bottom pb-2">⚡ Filter Listings</h6>
@@ -33,15 +47,18 @@
                             <option value="Honda" {% if brand_filter == 'Honda' %}selected{% endif %}>Honda</option>
                         </select>
                     </div>
+                    
+                    <!-- DYNAMIC DISTRICT / CITY FILTER -->
                     <div class="mb-3">
                         <label class="form-label small fw-bold text-muted">District</label>
                         <select name="city" class="form-select" onchange="this.form.submit()">
                             <option value="">All Districts</option>
                             {% for c in cities %}
-                            <option value="{{ c }}" {% if city_filter == c %}selected{% endif %}>{{ c }}</option>
+                            <option value="{{ c.name }}" {% if city_filter == c.name %}selected{% endif %}>{{ c.name }}</option>
                             {% endfor %}
                         </select>
                     </div>
+                    
                     <div class="mb-3">
                         <label class="form-label small fw-bold text-muted">Max Price</label>
                         <input type="number" name="max_price" class="form-control" placeholder="E.g., 500000" value="{{ max_price }}" onchange="this.form.submit()">
@@ -55,28 +72,96 @@
             </div>
         </div>
 
-        <!-- Car Grid -->
+        <!-- Car Grid Content Block -->
         <div class="col-lg-9">
             <div class="row g-4">
                 {% for car in cars %}
                 <div class="col-md-6 col-xl-4">
-                    <div class="card card-garage h-100">
+                    <div class="card card-garage h-100 shadow-sm border-0 overflow-hidden">
                         <div class="position-relative">
-                            <img src="{{ car.photo_url }}" class="card-img-top" style="height: 180px; object-fit: cover;" alt="{{ car.make }}">
+                            
+                            <!-- CAROUSEL SLIDER LINKED TO DETAIL PAGE -->
+                            <div id="carouselCar{{ car.id }}" class="carousel slide" data-bs-ride="carousel">
+                                <div class="carousel-inner">
+                                    {% for p in car.photos.all %}
+                                    <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                                        <a href="{% url 'car_detail' car.id %}">
+                                            <img src="{{ p.image.url }}" class="card-img-top" style="height: 190px; object-fit: cover;" alt="{{ car.make }}">
+                                        </a>
+                                    </div>
+                                    {% empty %}
+                                    <div class="carousel-item active">
+                                        <a href="{% url 'car_detail' car.id %}" class="text-decoration-none">
+                                            <div class="bg-secondary text-white d-flex align-items-center justify-content-center" style="height: 190px;">
+                                                No Photos Available
+                                            </div>
+                                        </a>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                {% if car.photos.all|length > 1 %}
+                                <button class="carousel-control-prev" type="button" data-bs-target="#carouselCar{{ car.id }}" data-bs-slide="prev">
+                                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                </button>
+                                <button class="carousel-control-next" type="button" data-bs-target="#carouselCar{{ car.id }}" data-bs-slide="next">
+                                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                </button>
+                                {% endif %}
+                            </div>
+
                             <span class="position-absolute top-0 end-0 m-2 badge bg-dark bg-opacity-75 text-warning">✅ Verified</span>
-                            <span class="position-absolute bottom-0 start-0 m-2 badge bg-dark text-white">₹{{ car.price|floatformat:0 }}</span>
+                            <span class="position-absolute bottom-0 start-0 m-2 badge bg-dark text-white fs-6">₹{{ car.price|floatformat:0 }}</span>
                         </div>
-                        <div class="card-body">
-                            <h6 class="fw-black small text-uppercase">{{ car.make }} - {{ car.model }}</h6>
-                            <p class="text-muted small mb-2">Year: {{ car.year }} | {{ car.kms|floatformat:0 }} KMs</p>
-                            <p class="text-muted small" style="font-size: 0.8rem; line-height: 1.5;">{{ car.description|truncatewords:20 }}</p>
+                        
+                        <div class="card-body d-flex flex-column justify-content-between">
+                            <div>
+                                <!-- TITLE LINKED TO DETAILS PAGE -->
+                                <a href="{% url 'car_detail' car.id %}" class="text-decoration-none text-dark d-block mb-1">
+                                    <h6 class="fw-black text-uppercase mb-0" style="font-size: 0.95rem;">
+                                        {{ car.make }} - {{ car.model }} <span class="text-primary" style="font-size: 0.8rem;">↗</span>
+                                    </h6>
+                                    <small class="text-muted font-normal">({{ car.variant }})</small>
+                                </a>
+                                
+                                <p class="text-muted small mb-2" style="font-size: 0.8rem;">
+                                    📅 {{ car.year }} | 🎛️ {{ car.transmission }} | ⛽ {{ car.fuel_type }} | 🛣️ {{ car.kms|floatformat:0 }} KMs
+                                </p>
+                                
+                                <hr class="my-2">
+                                
+                                <!-- SHOWING CAR DOCUMENTS & HISTORY -->
+                                <div class="mb-2 bg-light p-2 rounded" style="font-size: 0.75rem;">
+                                    <div class="row g-1">
+                                        <div class="col-6">🏢 <strong>RTO State:</strong> {{ car.reg_state_rto|default:"N/A" }}</div>
+                                        <div class="col-6">📝 <strong>Reg. Year:</strong> {{ car.reg_year|default:car.year }}</div>
+                                        <div class="col-6">📜 <strong>NOC Ready:</strong> <span class="badge {% if car.noc_status == 'Yes' %}bg-success{% else %}bg-danger{% endif %}">{{ car.noc_status }}</span></div>
+                                        <div class="col-6">👤 <strong>Owners:</strong> {{ car.owners_count }}</div>
+                                        <div class="col-12 mt-1">
+                                            🛡️ <strong>Insurance:</strong> 
+                                            <span class="badge {% if car.insurance_status == 'Active' %}bg-success{% else %}bg-secondary{% endif %}">{{ car.insurance_status }}</span>
+                                            {% if car.insurance_status == 'Active' and car.insurance_type %}
+                                                <span class="text-muted">({{ car.insurance_type }})</span>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-12 mt-1">
+                                            ⚠️ <strong>Accidental History:</strong> 
+                                            <span class="badge {% if car.accidental_history == 'Yes' %}bg-danger{% else %}bg-success{% endif %}">
+                                                {% if car.accidental_history == 'Yes' %}Yes (Damaged){% else %}No Accident{% endif %}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <p class="text-muted small my-2" style="font-size: 0.8rem; line-height: 1.4;">{{ car.description|truncatewords:12 }}</p>
+                            </div>
                             
-                            {% if car.video_link %}
-                            <a href="{{ car.video_link }}" target="_blank" class="small fw-bold text-decoration-none">🎥 Walkaround Video ↗</a>
-                            {% endif %}
-                            
-                            <div class="d-grid mt-3">
-                                <button class="btn btn-dark btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#inquiryModal{{ car.id }}">📞 INQUIRE / INTERESTED</button>
+                            <!-- ACTIONS BUTTONS BLOCK -->
+                            <div class="d-flex flex-column gap-2 mt-2">
+                                <!-- NEW DETAILS PAGE BUTTON -->
+                                <a href="{% url 'car_detail' car.id %}" class="btn btn-outline-warning text-dark btn-sm fw-bold">🔍 VIEW DETAILS & IMAGES</a>
+                                
+                                <!-- QUICK INQUIRY BUTTON -->
+                                <button class="btn btn-dark btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#inquiryModal{{ car.id }}">📞 QUICK INQUIRE</button>
                             </div>
                         </div>
                     </div>
@@ -124,7 +209,7 @@
     </div>
 </div>
 
-<!-- Sell Car Modal -->
+<!-- Sell Car Modal Form Segment -->
 {% if user.is_authenticated %}
 <div class="modal fade" id="sellCarModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
@@ -133,10 +218,12 @@
                 <h6 class="modal-title fw-bold">🚗 Apni Car Sell List Karein</h6>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <form method="post" action="{% url 'sell_car' %}">
+            
+            <form method="post" action="{% url 'sell_car' %}" enctype="multipart/form-data" id="sellCarForm">
                 {% csrf_token %}
                 <div class="modal-body">
                     <div class="row g-3">
+                        <!-- Seller Basic Info -->
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Full Name *</label>
                             <input type="text" name="seller_name" class="form-control" value="{{ user.first_name }}" required>
@@ -149,18 +236,18 @@
                             <label class="form-label small fw-bold">Alt Contact</label>
                             <input type="tel" name="seller_alt_contact" class="form-control">
                         </div>
+                        
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">City *</label>
                             <select name="seller_city" class="form-select" required>
-                                <option value="Jabalpur">Jabalpur</option>
-                                <option value="Katni">Katni</option>
-                                <option value="Satna">Satna</option>
-                                <option value="Maihar">Maihar</option>
-                                <option value="Sagar">Sagar</option>
-                                <option value="Damoh">Damoh</option>
+                                <option value="">Select City</option>
+                                {% for c in cities %}
+                                <option value="{{ c.name }}">{{ c.name }}</option>
+                                {% endfor %}
                             </select>
                         </div>
                         
+                        <!-- Car Specs Info -->
                         <div class="col-md-4">
                             <label class="form-label small fw-bold">Make *</label>
                             <input type="text" name="make" class="form-control" placeholder="Maruti Suzuki" required>
@@ -174,7 +261,7 @@
                             <input type="text" name="variant" class="form-control" placeholder="VXI Petrol">
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label small fw-bold">Year *</label>
+                            <label class="form-label small fw-bold">Mfg. Year *</label>
                             <input type="number" name="year" class="form-control" placeholder="2018" required>
                         </div>
                         <div class="col-md-3">
@@ -186,7 +273,7 @@
                             <input type="number" name="price" class="form-control" placeholder="350000" required>
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label small fw-bold">Owners</label>
+                            <label class="form-label small fw-bold">Owners Count</label>
                             <input type="number" name="owners_count" class="form-control" value="1">
                         </div>
                         
@@ -212,18 +299,126 @@
                             <textarea name="description" class="form-control" rows="2" placeholder="Condition details..." required></textarea>
                         </div>
                         
-                        <div class="col-12">
-                            <label class="form-label small fw-bold">Photo URL *</label>
-                            <input type="url" name="photo_url" class="form-control" value="https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&q=80&w=600" required>
+                        <!-- DOCUMENTS & VEHICLE HISTORY INPUTS -->
+                        <div class="col-12 mt-3 pt-2 border-top">
+                            <h6 class="text-secondary fw-bold mb-2" style="font-size: 0.85rem;">📋 Car Documents & Incident History</h6>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold">Reg. State / RTO</label>
+                            <input type="text" name="reg_state_rto" class="form-control" placeholder="e.g. MP-20">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold">Registration Year</label>
+                            <input type="number" name="reg_year" class="form-control" placeholder="e.g. 2019">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold">NOC Status</label>
+                            <select name="noc_status" class="form-select">
+                                <option value="Yes">Yes (Available)</option>
+                                <option value="No">No</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold">Fitness Validity</label>
+                            <input type="text" name="fitness_validity" class="form-control" placeholder="e.g. Upto 2033">
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Insurance Status</label>
+                            <select name="insurance_status" class="form-select" id="insuranceStatusSelect" onchange="toggleInsuranceFields()">
+                                <option value="Active">Active</option>
+                                <option value="Expired" selected>Expired</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 insurance-conditional">
+                            <label class="form-label small fw-bold">Insurance Type</label>
+                            <input type="text" name="insurance_type" class="form-control" placeholder="Comprehensive/ThirdParty">
+                        </div>
+                        <div class="col-md-4 insurance-conditional">
+                            <label class="form-label small fw-bold">Insurance Expiry</label>
+                            <input type="date" name="insurance_expiry" class="form-control">
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Accidental History</label>
+                            <select name="accidental_history" class="form-select" id="accidentalSelect" onchange="toggleAccidentalFields()">
+                                <option value="No" selected>No (Clean Title)</option>
+                                <option value="Yes">Yes (Has History)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-8 accidental-conditional">
+                            <label class="form-label small fw-bold">Accidental Damage Details</label>
+                            <input type="text" name="accidental_details" class="form-control" placeholder="e.g. Left door replaced, bumper denting done">
+                        </div>
+
+                        <!-- Media Uploads Fields -->
+                        <div class="col-md-6 mt-3">
+                            <label class="form-label small fw-bold">Upload Photos * (Max 10)</label>
+                            <input type="file" name="photos" id="photoFileField" class="form-control" accept="image/*" multiple required>
+                            <div class="form-text text-muted" style="font-size: 0.72rem;">Ek sath maximum 10 clear photos chun sakte hain.</div>
+                        </div>
+                        
+                        <div class="col-md-6 mt-3">
+                            <label class="form-label small fw-bold">Upload Walkaround Videos (Max 4)</label>
+                            <input type="file" name="videos" id="videoFileField" class="form-control" accept="video/*" multiple>
+                            <div class="form-text text-muted" style="font-size: 0.72rem;">Ek sath maximum 4 small clips upload kar sakte hain.</div>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="submit" class="btn btn-amber fw-bold">🚗 SUBMIT FOR APPROVAL</button>
+                    <button type="submit" class="btn btn-warning text-dark fw-bold">🚗 SUBMIT FOR APPROVAL</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
+
+<!-- JS Form Logic Scripts -->
+<script>
+function toggleInsuranceFields() {
+    var status = document.getElementById('insuranceStatusSelect').value;
+    var conditionFields = document.querySelectorAll('.insurance-conditional');
+    conditionFields.forEach(function(field) {
+        if (status === 'Active') {
+            field.style.display = 'block';
+        } else {
+            field.style.display = 'none';
+        }
+    });
+}
+
+function toggleAccidentalFields() {
+    var status = document.getElementById('accidentalSelect').value;
+    var detailsField = document.querySelector('.accidental-conditional');
+    if (status === 'Yes') {
+        detailsField.style.display = 'block';
+    } else {
+        detailsField.style.display = 'none';
+    }
+}
+
+document.getElementById('sellCarForm').addEventListener('submit', function(e) {
+    var photoInput = document.getElementById('photoFileField');
+    var videoInput = document.getElementById('videoFileField');
+    
+    if (photoInput.files.length > 10) {
+        alert("Bhai, Maximum 10 photos hi select kar sakte ho!");
+        e.preventDefault();
+        return false;
+    }
+    
+    if (videoInput.files.length > 4) {
+        alert("Bhai, Maximum 4 videos hi select kar sakte ho!");
+        e.preventDefault();
+        return false;
+    }
+});
+
+document.addEventListener("DOMContentLoaded", function() {
+    toggleInsuranceFields();
+    toggleAccidentalFields();
+});
+</script>
 {% endif %}
 {% endblock %}

@@ -34,7 +34,10 @@ urlpatterns = [
     # Marketplace
     path('car/sell/', views.sell_car, name='sell_car'),
     path('car/<int:car_id>/inquiry/', views.car_inquiry, name='car_inquiry'),
-    
+    path('car/<int:car_id>/', views.car_detail_view, name='car_detail'),
+
     # Parts
     path('part/<int:part_id>/order/', views.order_part, name='order_part'),
+
+
 ]

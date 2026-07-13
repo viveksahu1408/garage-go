@@ -148,13 +148,10 @@ class MarketplaceCar(models.Model):
     accidental_history = models.CharField(max_length=20, choices=[('Yes', 'Yes'), ('No', 'No')], default='No')
     accidental_details = models.TextField(blank=True)
     
-    # Media
-    photo_url = models.URLField(max_length=500)
-    photo_urls = models.JSONField(default=list, blank=True)
-    video_link = models.URLField(max_length=500, blank=True)
-    video_urls = models.JSONField(default=list, blank=True)
+    # --- MEDIA FIELDS MODIFIED FOR FILE UPLOADS ---
+    # Har car ke liye multiple photos aur videos save karne ke liye hum related child models banayenge
+    # Isse data clean rahega aur filter/looping me dikkat nahi aayegi.
     
-    # Status
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
     commission_earned = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     
@@ -166,6 +163,24 @@ class MarketplaceCar(models.Model):
     
     class Meta:
         ordering = ['-created_at']
+
+
+# 📸 MULTIPLE PHOTOS KE LIYE NEW TABLE
+class CarPhoto(models.Model):
+    car = models.ForeignKey(MarketplaceCar, on_delete=models.CASCADE, related_name='photos')
+    image = models.ImageField(upload_to='cars/photos/')
+
+    def __str__(self):
+        return f"Photo for {self.car.make} {self.car.model}"
+
+
+# 🎥 MULTIPLE VIDEOS KE LIYE NEW TABLE
+class CarVideo(models.Model):
+    car = models.ForeignKey(MarketplaceCar, on_delete=models.CASCADE, related_name='videos')
+    video = models.FileField(upload_to='cars/videos/')
+
+    def __str__(self):
+        return f"Video for {self.car.make} {self.car.model}"
 
 
 class AutoPart(models.Model):
@@ -234,6 +249,7 @@ class Inquiry(models.Model):
     class Meta:
         ordering = ['-date']
 
+
 class ServiceCategory(models.Model):
     name = models.CharField(max_length=100, unique=True, help_text="E.g., Car Wash, Car Services, Breakdown Services")
     slug = models.SlugField(max_length=100, unique=True, help_text="E.g., car_wash, car_services (Lowercase without spaces)")
@@ -244,6 +260,7 @@ class ServiceCategory(models.Model):
 
     class Meta:
         verbose_name_plural = "Service Categories"
+
 
 class ServicePackage(models.Model):
     category = models.ForeignKey(ServiceCategory, on_delete=models.CASCADE, related_name='packages')
@@ -265,4 +282,4 @@ class City(models.Model):
         return self.name
 
     class Meta:
-        verbose_name_plural = "Cities"       
+        verbose_name_plural = "Cities"

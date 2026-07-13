@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+{% block title %}{{ car.make }} {{ car.model }} Details - GarageGo{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <!-- Back Button & Title Heading -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <a href="{% url 'marketplace' %}" class="btn btn-outline-dark fw-bold btn-sm">⬅ Back to Marketplace</a>
+        <span class="badge bg-warning text-dark px-3 py-2 fw-bold fs-6">Status: {{ car.status }}</span>
+    </div>
+
+    <div class="row g-4">
+        <!-- LEFT COLUMN: BIG PREMIUM IMAGES SLIDER & VIDEOS -->
+        <div class="col-lg-7">
+            <!-- Large Image Gallery Carousel -->
+            <div class="card border-0 shadow-sm overflow-hidden mb-4">
+                <div id="detailCarCarousel" class="carousel slide" data-bs-ride="carousel">
+                    <div class="carousel-inner bg-dark">
+                        {% for p in car.photos.all %}
+                        <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                            <img src="{{ p.image.url }}" class="d-block w-100 style-img" style="max-height: 480px; object-fit: contain;" alt="Car Photo">
+                        </div>
+                        {% empty %}
+                        <div class="carousel-item active text-center py-5 text-white">
+                            <h5>📸 No Images Uploaded</h5>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% if car.photos.all|length > 1 %}
+                    <button class="carousel-control-prev" type="button" data-bs-target="#detailCarCarousel" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#detailCarCarousel" data-bs-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Dynamic Videos Section -->
+            {% if car.videos.all %}
+            <div class="card p-3 border-0 shadow-sm mb-4">
+                <h5 class="fw-bold mb-3 text-dark">🎥 Walkaround Videos ({{ car.videos.all|length }})</h5>
+                <div class="row g-3">
+                    {% for v in car.videos.all %}
+                    <div class="col-md-6">
+                        <div class="ratio ratio-16x9 rounded overflow-hidden shadow-sm">
+                            <video controls class="bg-black">
+                                <source src="{{ v.video.url }}" type="video/mp4">
+                                Your browser does not support the video tag.
+                            </video>
+                        </div>
+                        <span class="text-muted small mt-1 d-block text-center">Clip #{{ forloop.counter }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Description Box -->
+            <div class="card p-4 border-0 shadow-sm">
+                <h5 class="fw-bold mb-2">📝 Seller Description</h5>
+                <p class="text-secondary" style="white-space: pre-line; line-height: 1.6;">{{ car.description }}</p>
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN: CAR SPECS, PRICING & BUYER INQUIRY FORM -->
+        <div class="col-lg-5">
+            <!-- Price and Highlight Card -->
+            <div class="card p-4 border-0 shadow-sm bg-warning text-dark mb-4">
+                <small class="text-uppercase fw-bold tracking-wider opacity-75">Expected Price</small>
+                <h1 class="fw-black display-5 mb-1">₹{{ car.price|floatformat:0 }}</h1>
+                <h4 class="fw-bold text-uppercase">{{ car.make }} {{ car.model }} <span class="fs-6 font-normal text-muted">({{ car.variant }})</span></h4>
+                <div class="mt-2 small">📍 Location: <strong>{{ car.seller_city }}, {{ car.seller_address|default:"Local" }}</strong></div>
+            </div>
+
+            <!-- Detailed Specifications Grid Matrix -->
+            <div class="card p-4 border-0 shadow-sm mb-4">
+                <h5 class="fw-bold mb-3">⚙️ Specifications & History</h5>
+                <table class="table table-striped table-borderless align-middle mb-0" style="font-size: 0.9rem;">
+                    <tbody>
+                        <tr><td>📅 Manufacturing Year</td><th class="text-end">{{ car.year }}</th></tr>
+                        <tr><td>🛣️ Kilometers Driven</td><th class="text-end">{{ car.kms|floatformat:0 }} kms</th></tr>
+                        <tr><td>⛽ Fuel Type</td><th class="text-end">{{ car.fuel_type }}</th></tr>
+                        <tr><td>🎛️ Transmission Type</td><th class="text-end">{{ car.transmission }}</th></tr>
+                        <tr><td>👤 Number of Owners</td><th class="text-end">{{ car.owners_count }} Owner(s)</th></tr>
+                        <tr><td>🏢 Registered RTO State</td><th class="text-end">{{ car.reg_state_rto|default:"N/A" }}</th></tr>
+                        <tr><td>📝 Registration Year</td><th class="text-end">{{ car.reg_year|default:car.year }}</th></tr>
+                        <tr><td>📜 NOC Available</td><th class="text-end"><span class="badge {% if car.noc_status == 'Yes' %}bg-success{% else %}bg-danger{% endif %}">{{ car.noc_status }}</span></th></tr>
+                        <tr><td>🛡️ Insurance Status</td><th class="text-end"><span class="badge {% if car.insurance_status == 'Active' %}bg-success{% else %}bg-secondary{% endif %}">{{ car.insurance_status }}</span></th></tr>
+                        {% if car.insurance_status == 'Active' %}
+                        <tr><td>📄 Insurance Type</td><th class="text-end text-muted">{{ car.insurance_type|default:"Standard" }}</th></tr>
+                        <tr><td>⏳ Insurance Expiry</td><th class="text-end text-muted">{{ car.insurance_expiry|date:"d M Y" }}</th></tr>
+                        {% endif %}
+                        <tr><td>⚠️ Accidental History</td><th class="text-end"><span class="badge {% if car.accidental_history == 'Yes' %}bg-danger{% else %}bg-success{% endif %}">{{ car.accidental_history }}</span></th></tr>
+                    </tbody>
+                </table>
+                {% if car.accidental_history == 'Yes' and car.accidental_details %}
+                <div class="alert alert-danger p-2 mt-2 small mb-0">
+                    <strong>Accident Notes:</strong> {{ car.accidental_details }}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Instant Buyer Lead Form -->
+            <div class="card p-4 border-0 shadow-sm bg-dark text-white">
+                <h5 class="fw-bold mb-2 text-warning">📞 Want to Buy or Take Test Drive?</h5>
+                <p class="small text-muted mb-3">Apni details fill karein, hum direct seller aur field agent se aapki meeting arrange karwaenge.</p>
+                
+                <form method="post" action="{% url 'car_inquiry' car.id %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label small">Your Name *</label>
+                        <input type="text" name="buyer_name" class="form-control" value="{{ user.first_name|default:'' }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small">Contact Mobile *</label>
+                        <input type="tel" name="buyer_contact" class="form-control" value="{{ user.contact|default:'' }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small">Questions / Message</label>
+                        <textarea name="buyer_message" class="form-control" rows="2" placeholder="Mujhe ye car dekhni hai, call back karein..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-warning w-100 text-dark fw-bold py-2">💌 SEND CALL-BACK REQUEST</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
