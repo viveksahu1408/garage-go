@@ -325,7 +325,7 @@
     <div class="gg-shell">
         <div class="gg-tabs">
             <button class="gg-tab active" onclick="switchTab(this, 'mechanics')">🔧 Verify Mechanics ({{ stats.pending_mechanics }})</button>
-            <button class="gg-tab" onclick="switchTab(this, 'cars')">🚗 Used Cars</button>
+            <button class="gg-tab" onclick="switchTab(this, 'cars')">🚗 Used Cars ({{ stats.pending_cars }})</button>
             <button class="gg-tab" onclick="switchTab(this, 'bookings')">🧼 Assign Bookings</button>
             <button class="gg-tab" onclick="switchTab(this, 'orders')">🛒 Spares Orders ({{ stats.total_orders }})</button>
             <button class="gg-tab" onclick="switchTab(this, 'parts')">➕ Add Parts</button>
@@ -366,38 +366,144 @@
                 {% endfor %}
             </div>
 
-            <!-- TAB 2: Cars -->
+            <!-- TAB 2: Used Cars (AB APNE SAHI PANEL ME HAI!) -->
             <div id="panel-cars" class="gg-panel">
-                <h6 class="gg-panel-title">Used Cars Management</h6>
-                {% for car in cars %}
-                <div class="gg-row">
-                    <div>
-                        <div class="d-flex align-items-center gap-2 flex-wrap">
-                            <span class="gg-row-title">{{ car.make }} {{ car.model }} ({{ car.year }})</span>
-                            <span class="gg-chip {% if car.status == 'Approved' %}gg-chip-green{% elif car.status == 'Sold' %}gg-chip-purple{% else %}gg-chip-orange{% endif %}">{{ car.status }}</span>
-                        </div>
-                        <p class="gg-row-meta"><span class="gg-price">₹{{ car.price|floatformat:0 }}</span> | 📞 {{ car.seller_name }} ({{ car.seller_contact }})</p>
-                    </div>
-                    <div class="d-flex gap-2">
-                        {% if car.status == 'Pending' %}
-                        <form method="post" action="{% url 'approve_car' car.id %}" class="d-inline">
-                            {% csrf_token %}
-                            <input type="hidden" name="status" value="Approved">
-                            <button type="submit" class="gg-btn gg-btn-approve">✅ Approve</button>
-                        </form>
-                        {% endif %}
-                        {% if car.status == 'Approved' %}
-                        <form method="post" action="{% url 'approve_car' car.id %}" class="d-inline">
-                            {% csrf_token %}
-                            <input type="hidden" name="status" value="Sold">
-                            <button type="submit" class="gg-btn gg-btn-amber">💰 Mark Sold</button>
-                        </form>
-                        {% endif %}
-                    </div>
+                <h6 class="gg-panel-title">Used Car Listing Approvals</h6>
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Car & Price</th>
+                                <th>Seller Profile (Listed By)</th>
+                                <th>Status</th>
+                                <th>Details Preview</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for car in cars %}
+                            <tr>
+                                <td>
+                                    <strong>{{ car.make }} {{ car.model }} ({{ car.year }})</strong> <br>
+                                    <span class="text-success small fw-bold">₹{{ car.price }}</span>
+                                </td>
+                                <td>
+                                    <div class="small">
+                                        <strong>User:</strong> {{ car.listed_by.get_full_name|default:car.listed_by.username }} <br>
+                                        <strong>Phone:</strong> {{ car.listed_by.contact }} <br>
+                                        <strong>Role:</strong> <span class="badge bg-secondary text-dark">{{ car.listed_by.role|capfirst }}</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if car.status == 'Pending' %}
+                                        <span class="badge bg-warning text-dark">Pending Approval</span>
+                                    {% elif car.status == 'Approved' %}
+                                        <span class="badge bg-success">Approved / Live</span>
+                                    {% elif car.status == 'Rejected' %}
+                                        <span class="badge bg-danger">Rejected</span>
+                                    {% elif car.status == 'Sold' %}
+                                        <span class="badge bg-dark">Sold (Earned 2%: ₹{{ car.commission_earned }})</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-dark py-1" data-bs-toggle="modal" data-bs-target="#carDetailModal{{ car.id }}">
+                                        🔍 View Full Spec
+                                    </button>
+                                </td>
+                                <td>
+                                    {% if car.status == 'Pending' %}
+                                    <div class="d-flex gap-1">
+                                        <form method="post" action="{% url 'approve_car' car.id %}">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="status" value="Approved">
+                                            <button type="submit" class="btn btn-sm btn-success py-1">Approve</button>
+                                        </form>
+                                        <form method="post" action="{% url 'approve_car' car.id %}">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="status" value="Rejected">
+                                            <button type="submit" class="btn btn-sm btn-danger py-1">Reject</button>
+                                        </form>
+                                    </div>
+                                    {% else %}
+                                        <span class="text-muted small">-</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+
+                            <!-- 🚗 CAR VIEW MODAL -->
+                            <div class="modal fade" id="carDetailModal{{ car.id }}" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog modal-lg">
+                                    <div class="modal-content text-dark">
+                                        <div class="modal-header bg-dark text-white">
+                                            <h5 class="modal-title fw-bold">📋 Car Specs & Verification Panel</h5>
+                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="row g-3">
+                                                <div class="col-md-6">
+                                                    <h6 class="fw-bold border-bottom pb-1">📸 Uploaded Images ({{ car.photos.count }})</h6>
+                                                    <div class="row g-1">
+                                                        {% for photo in car.photos.all %}
+                                                        <div class="col-4 mb-2">
+                                                            <a href="{{ photo.image.url }}" target="_blank">
+                                                                <img src="{{ photo.image.url }}" class="img-fluid rounded border shadow-sm" style="height: 80px; width: 100%; object-fit: cover;">
+                                                            </a>
+                                                        </div>
+                                                        {% endfor %}
+                                                    </div>
+                                                    {% if car.videos.all %}
+                                                    <h6 class="fw-bold border-bottom pb-1 mt-3">🎥 Uploaded Videos ({{ car.videos.count }})</h6>
+                                                    <div class="row g-1">
+                                                        {% for video in car.videos.all %}
+                                                        <div class="col-12 mb-2">
+                                                            <video src="{{ video.video.url }}" controls class="w-100 rounded border shadow-sm" style="height: 140px;"></video>
+                                                        </div>
+                                                        {% endfor %}
+                                                    </div>
+                                                    {% endif %}
+                                                </div>
+                                                <div class="col-md-6 bg-light p-3 rounded">
+                                                    <h6 class="fw-bold border-bottom pb-1 text-primary">⚙️ Vehicle Technical Specifications</h6>
+                                                    <ul class="list-unstyled small mb-3">
+                                                        <li><strong>Brand & Model:</strong> {{ car.make }} - {{ car.model }} {{ car.variant }}</li>
+                                                        <li><strong>Year:</strong> {{ car.year }} (Reg Year: {{ car.reg_year|default:"N/A" }})</li>
+                                                        <li><strong>Fuel / Transmission:</strong> {{ car.fuel_type }} / {{ car.transmission }}</li>
+                                                        <li><strong>KMs Driven:</strong> {{ car.kms }} kms</li>
+                                                        <li><strong>Owners Count:</strong> {{ car.owners_count }} Owner(s)</li>
+                                                        <li><strong>RTO State Code:</strong> {{ car.reg_state_rto|default:"N/A" }}</li>
+                                                    </ul>
+                                                    
+                                                    <h6 class="fw-bold border-bottom pb-1 text-primary">📑 Insurance & Legality Status</h6>
+                                                    <ul class="list-unstyled small mb-3">
+                                                        <li><strong>Insurance:</strong> {{ car.insurance_status }} (Type: {{ car.insurance_type|default:"N/A" }})</li>
+                                                        <li><strong>NOC Available:</strong> {{ car.noc_status }}</li>
+                                                        <li><strong>Fitness Validity:</strong> {{ car.fitness_validity|default:"N/A" }}</li>
+                                                        <li><strong>Accidental History:</strong> {{ car.accidental_history }}</li>
+                                                        {% if car.accidental_history == 'Yes' %}
+                                                            <li class="text-danger"><strong>Accident Details:</strong> {{ car.accidental_details }}</li>
+                                                        {% endif %}
+                                                    </ul>
+
+                                                    <h6 class="fw-bold border-bottom pb-1 text-primary">👤 Seller Information</h6>
+                                                    <ul class="list-unstyled small mb-0">
+                                                        <li><strong>Seller Name:</strong> {{ car.seller_name }}</li>
+                                                        <li><strong>Phone Numbers:</strong> {{ car.seller_contact }} | {{ car.seller_alt_contact|default:"None" }}</li>
+                                                        <li><strong>Address:</strong> {{ car.seller_address }} ({{ car.seller_city }})</li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-4"><p class="gg-empty mb-0">No cars registered.</p></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
-                {% empty %}
-                <p class="gg-empty">No cars registered.</p>
-                {% endfor %}
             </div>
 
             <!-- TAB 3: Assign Bookings -->
@@ -456,56 +562,55 @@
                 {% endfor %}
             </div>
 
-           <!-- TAB 5: Add Parts with local device photo upload capabilities -->
-<div id="panel-parts" class="gg-panel">
-    <h6 class="gg-panel-title">Add New Spare Part</h6>
-    
-    <!-- Added enctype for processing raw file binaries -->
-    <form method="post" action="{% url 'add_part' %}" enctype="multipart/form-data" class="col-lg-6" id="addPartAdminForm">
-        {% csrf_token %}
-        <div class="mb-3">
-            <label class="gg-field-label">Part Name *</label>
-            <input type="text" name="name" class="gg-input" placeholder="E.g., Maruti Swift Front Bumper" required>
-        </div>
-        <div class="row g-2 mb-3">
-            <div class="col-6">
-                <label class="gg-field-label">Type *</label>
-                <select name="type" class="gg-select">
-                    <option value="New">New</option>
-                    <option value="Used">Used</option>
-                </select>
-            </div>
-            <div class="col-6">
-                <label class="gg-field-label">Compatibility</label>
-                <input type="text" name="compatibility" class="gg-input" placeholder="Maruti Swift (2018-2022)">
-            </div>
-        </div>
-        <div class="row g-2 mb-3">
-            <div class="col-6">
-                <label class="gg-field-label">Price (₹) *</label>
-                <input type="number" name="price" class="gg-input" required>
-            </div>
-            <div class="col-6">
-                <label class="gg-field-label">Stock Qty *</label>
-                <input type="number" name="quantity" class="gg-input" required>
-            </div>
-        </div>
+            <!-- TAB 5: Add Parts with local device photo upload capabilities -->
+            <div id="panel-parts" class="gg-panel">
+                <h6 class="gg-panel-title">Add New Spare Part</h6>
+                
+                <form method="post" action="{% url 'add_part' %}" enctype="multipart/form-data" class="col-lg-6" id="addPartAdminForm">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="gg-field-label">Part Name *</label>
+                        <input type="text" name="name" class="gg-input" placeholder="E.g., Maruti Swift Front Bumper" required>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="gg-field-label">Type *</label>
+                            <select name="type" class="gg-select">
+                                <option value="New">New</option>
+                                <option value="Used">Used</option>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="gg-field-label">Compatibility</label>
+                            <input type="text" name="compatibility" class="gg-input" placeholder="Maruti Swift (2018-2022)">
+                        </div>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="gg-field-label">Price (₹) *</label>
+                            <input type="number" name="price" class="gg-input" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="gg-field-label">Stock Qty *</label>
+                            <input type="number" name="quantity" class="gg-input" required>
+                        </div>
+                    </div>
 
-        <!-- NEW FIELD: Device File Gallery Direct Multi-Upload (No URL Links) -->
-        <div class="mb-3">
-            <label class="gg-field-label">Upload Spare Photos * (Max 4)</label>
-            <input type="file" name="part_photos" id="partPhotosField" class="gg-input" accept="image/*" multiple required>
-            <div class="form-text text-muted" style="font-size: 0.72rem; color: #888;">Select maximum 4 clear images of the part from your desktop/mobile.</div>
-        </div>
+                    <div class="mb-3">
+                        <label class="gg-field-label">Upload Spare Photos * (Max 4)</label>
+                        <input type="file" name="part_photos" id="partPhotosField" class="gg-input" accept="image/*" multiple required>
+                        <div class="form-text text-muted" style="font-size: 0.72rem; color: #888;">Select maximum 4 clear images of the part from your desktop/mobile.</div>
+                    </div>
 
-        <div class="mb-3">
-            <label class="gg-field-label">Description</label>
-            <textarea name="description" class="gg-textarea" rows="2" placeholder="Describe the physical condition, brand details, or warranty of the part."></textarea>
-        </div>
-        
-        <button type="submit" class="gg-btn gg-btn-dark">⚙️ Save &amp; Publish</button>
-    </form>
-</div>
+                    <div class="mb-3">
+                        <label class="gg-field-label">Description</label>
+                        <textarea name="description" class="gg-textarea" rows="2" placeholder="Describe the physical condition, brand details, or warranty of the part."></textarea>
+                    </div>
+                    
+                    <button type="submit" class="gg-btn gg-btn-dark">⚙️ Save &amp; Publish</button>
+                </form>
+            </div>
+
             <!-- TAB 6: Leads -->
             <div id="panel-leads" class="gg-panel">
                 <h6 class="gg-panel-title">Car Buyer Leads &amp; Commission</h6>
@@ -557,12 +662,12 @@
     }
 
     document.getElementById('addPartAdminForm').addEventListener('submit', function(e) {
-    var imagesInput = document.getElementById('partPhotosField');
-    if (imagesInput.files.length > 4) {
-        alert("Bhai, Spare parts ki maximum 4 images hi select kar sakte ho!");
-        e.preventDefault();
-        return false;
-    }
-});
+        var imagesInput = document.getElementById('partPhotosField');
+        if (imagesInput.files.length > 4) {
+            alert("Bhai, Spare parts ki maximum 4 images hi select kar sakte ho!");
+            e.preventDefault();
+            return false;
+        }
+    });
 </script>
 {% endblock %}

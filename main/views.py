@@ -10,6 +10,10 @@ from .models import (
 # Naye tables explicitly import kar rahe hain file handling ke liye
 from .models import CarPhoto, CarVideo 
 from .models import AutoPart, AutoPartPhoto, PartOrder
+from decimal import Decimal
+
+
+
 # ============================================================
 # HELPERS
 # ============================================================
@@ -224,21 +228,16 @@ def create_booking(request):
 def user_dashboard(request):
     bookings = Booking.objects.filter(customer_contact=request.user.contact)
     
-    # ⚙️ User ke contacts se orders load karein (Using buyer_contact or buyer_name)
-    # Agar model me buyer_contact field h to sahi h, warna safe check ke liye hum mobile/username se check karenge
-    user_orders = PartOrder.objects.filter(
-        buyer_contact=request.user.contact
-    ).order_by('-order_date') if hasattr(PartOrder, 'buyer_contact') else PartOrder.objects.filter(
-        buyer_name=request.user.first_name if request.user.first_name else request.user.username
-    ).order_by('-order_date')
-
-    active_orders = [o for o in user_orders if o.status in ['Processing', 'Shipped']]
-    past_orders = [o for o in user_orders if o.status == 'Delivered']
+    # 🚗 Is user ne jo cars list ki hain unhe load karo (chahe wo kisi bhi status me hon)
+    my_cars = MarketplaceCar.objects.filter(listed_by=request.user).prefetch_related('photos')
+    
+    user_orders = PartOrder.objects.filter(buyer_contact=request.user.contact).order_by('-order_date')
 
     context = {
         'bookings': bookings,
-        'active_orders': active_orders,
-        'past_orders': past_orders,
+        'my_cars': my_cars, # Send listed cars to template
+        'active_orders': [o for o in user_orders if o.status in ['Processing', 'Shipped']],
+        'past_orders': [o for o in user_orders if o.status == 'Delivered'],
         'all_orders_count': len(user_orders)
     }
     return render(request, 'main/user_dashboard.html', context)
@@ -261,22 +260,18 @@ def mechanic_dashboard(request):
     
     bookings = Booking.objects.filter(assigned_mechanic=mechanic)
     
-    # ⚙️ Mechanic ke order load karein (Agar mechanic ne workshop ke liye parts mangwaye hon)
-    mechanic_orders = PartOrder.objects.filter(
-        buyer_contact=request.user.contact
-    ).order_by('-order_date') if hasattr(PartOrder, 'buyer_contact') else PartOrder.objects.filter(
-        buyer_name=request.user.first_name if request.user.first_name else request.user.username
-    ).order_by('-order_date')
-
-    active_orders = [o for o in mechanic_orders if o.status in ['Processing', 'Shipped']]
-    past_orders = [o for o in mechanic_orders if o.status == 'Delivered']
+    # 🚗 Is mechanic (user) ne jo cars list ki hain unhe load karo
+    my_cars = MarketplaceCar.objects.filter(listed_by=request.user).prefetch_related('photos')
+    
+    mechanic_orders = PartOrder.objects.filter(buyer_contact=request.user.contact).order_by('-order_date')
 
     context = {
         'mechanic': mechanic,
         'bookings': bookings,
+        'my_cars': my_cars, # Send listed cars to mechanic dashboard
         'active_city': get_active_city(request),
-        'active_orders': active_orders,
-        'past_orders': past_orders,
+        'active_orders': [o for o in mechanic_orders if o.status in ['Processing', 'Shipped']],
+        'past_orders': [o for o in mechanic_orders if o.status == 'Delivered'],
         'all_orders_count': len(mechanic_orders)
     }
     return render(request, 'main/mechanic_dashboard.html', context)
@@ -291,10 +286,11 @@ def admin_dashboard(request):
     
     pending_mechanics = Mechanic.objects.filter(status='Pending').count()
     pending_cars = MarketplaceCar.objects.filter(status='Pending').count()
-    active_bookings = Booking.objects.exclude(
-        status__in=['Completed', 'Rejected']
-    ).count()
+    active_bookings = Booking.objects.exclude(status__in=['Completed', 'Rejected']).count()
     total_orders = PartOrder.objects.count()
+    
+    # Prefetch user details for the listed_by foreign key to optimize queries
+    cars_with_details = MarketplaceCar.objects.select_related('listed_by').prefetch_related('photos', 'videos').all()
     
     context = {
         'stats': {
@@ -306,7 +302,7 @@ def admin_dashboard(request):
         },
         'mechanics': Mechanic.objects.all(),
         'bookings': Booking.objects.all(),
-        'cars': MarketplaceCar.objects.all(),
+        'cars': cars_with_details, # Integrated with details
         'orders': PartOrder.objects.all(),
         'inquiries': Inquiry.objects.all(),
         'parts': AutoPart.objects.all(),
@@ -572,3 +568,26 @@ def car_detail_view(request, car_id):
         'car': car,
         'cities': db_cities
     })
+
+
+@login_required
+def toggle_car_status(request, car_id):
+    # Car sirf wahi edit kar sake jisne use list kiya ho (Owner check)
+    car = get_object_or_404(MarketplaceCar, id=car_id, listed_by=request.user)
+    action = request.POST.get('action') # 'sold' ya 'cancel'
+    
+    if action == 'sold':
+        car.status = 'Sold'
+        # Agar admin 2% commission calculate karta hai offline ya direct sale pe:
+        car.commission_earned = car.price * Decimal('0.02') 
+        car.save()
+        messages.success(request, 'Badhai ho! Aapki car status "Sold" mark ho gayi hai aur marketplace se hata di gayi hai.')
+    elif action == 'cancel':
+        car.status = 'Rejected' # Rejected status se automatic marketplace se hide ho jayegi
+        car.save()
+        messages.success(request, 'Car listing cancel/remove kar di gayi hai!')
+        
+    # User ko uske respective dashboard par wapas redirect karo
+    if request.user.role == 'mechanic':
+        return redirect('mechanic_dashboard')
+    return redirect('user_dashboard')

@@ -176,6 +176,82 @@
                 </div>
             </div>
         </div>
+
+        <!-- 🚗 My Listed Cars Section -->
+<div class="card shadow-sm border-0 mt-4 p-4">
+    <h5 class="fw-bold mb-3 text-dark">🚗 My Listed Cars for Sale ({{ my_cars|length }})</h5>
+    
+    {% if my_cars %}
+    <div class="table-responsive">
+        <table class="table align-middle table-hover">
+            <thead class="table-light">
+                <tr class="small text-muted">
+                    <th>Car Details</th>
+                    <th>Price</th>
+                    <th>City</th>
+                    <th>Live Status</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for car in my_cars %}
+                <tr>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            {% if car.photos.all %}
+                                <img src="{{ car.photos.first.image.url }}" class="rounded me-2" style="width: 50px; height: 40px; object-fit: cover;">
+                            {% endif %}
+                            <div>
+                                <h6 class="mb-0 fw-bold">{{ car.make }} {{ car.model }}</h6>
+                                <small class="text-muted">{{ car.year }} | {{ car.fuel_type }} | {{ car.kms }} kms</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td><strong class="text-success">₹{{ car.price }}</strong></td>
+                    <td>{{ car.seller_city|default:"Not Set" }}</td>
+                    <td>
+                        {% if car.status == 'Pending' %}
+                            <span class="badge bg-warning text-dark">⏳ Pending Approval</span>
+                        {% elif car.status == 'Approved' %}
+                            <span class="badge bg-success">✅ Live on Market</span>
+                        {% elif car.status == 'Rejected' %}
+                            <span class="badge bg-danger">❌ Cancelled/Rejected</span>
+                        {% elif car.status == 'Sold' %}
+                            <span class="badge bg-dark">🤝 Sold Out</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end">
+                        {% if car.status == 'Approved' or car.status == 'Pending' %}
+                        <div class="d-inline-flex gap-1">
+                            <!-- Mark as Sold -->
+                            <form method="post" action="{% url 'toggle_car_status' car.id %}" onsubmit="return confirm('Kya sach me car bik gayi hai? Iske baad ye website se hat jayegi.');">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="sold">
+                                <button type="submit" class="btn btn-sm btn-success py-1 fw-bold">🤝 Mark Sold</button>
+                            </form>
+                            <!-- Cancel/Remove listing -->
+                            <form method="post" action="{% url 'toggle_car_status' car.id %}" onsubmit="return confirm('Kya aap is listing ko marketplace se hatana chahte hain?');">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="cancel">
+                                <button type="submit" class="btn btn-sm btn-outline-danger py-1 fw-bold">❌ Remove</button>
+                            </form>
+                        </div>
+                        {% else %}
+                            <span class="text-muted small">No action available</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="text-center py-4 bg-light rounded border border-dashed">
+        <p class="text-muted mb-2">Aapne abhi tak koi car sell ke liye list nahi kari hai.</p>
+        <a href="{% url 'marketplace' %}" class="btn btn-sm btn-dark fw-bold">➕ List My Car Now</a>
+    </div>
+    {% endif %}
+</div>
     </div>
     {% endif %}
 </div>
