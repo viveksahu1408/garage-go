@@ -456,50 +456,56 @@
                 {% endfor %}
             </div>
 
-            <!-- TAB 5: Add Parts -->
-            <div id="panel-parts" class="gg-panel">
-                <h6 class="gg-panel-title">Add New Spare Part</h6>
-                <form method="post" action="{% url 'add_part' %}" class="col-lg-6">
-                    {% csrf_token %}
-                    <div class="mb-3">
-                        <label class="gg-field-label">Part Name *</label>
-                        <input type="text" name="name" class="gg-input" placeholder="E.g., Maruti Swift Front Bumper" required>
-                    </div>
-                    <div class="row g-2 mb-3">
-                        <div class="col-6">
-                            <label class="gg-field-label">Type *</label>
-                            <select name="type" class="gg-select">
-                                <option value="New">New</option>
-                                <option value="Used">Used</option>
-                            </select>
-                        </div>
-                        <div class="col-6">
-                            <label class="gg-field-label">Compatibility</label>
-                            <input type="text" name="compatibility" class="gg-input" placeholder="Maruti Swift (2018-2022)">
-                        </div>
-                    </div>
-                    <div class="row g-2 mb-3">
-                        <div class="col-6">
-                            <label class="gg-field-label">Price (₹) *</label>
-                            <input type="number" name="price" class="gg-input" required>
-                        </div>
-                        <div class="col-6">
-                            <label class="gg-field-label">Stock Qty *</label>
-                            <input type="number" name="quantity" class="gg-input" required>
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="gg-field-label">Photo URL</label>
-                        <input type="url" name="photo_url" class="gg-input" value="https://images.unsplash.com/photo-1508962914676-134849a727f0?auto=format&fit=crop&q=80&w=600">
-                    </div>
-                    <div class="mb-3">
-                        <label class="gg-field-label">Description</label>
-                        <textarea name="description" class="gg-textarea" rows="2"></textarea>
-                    </div>
-                    <button type="submit" class="gg-btn gg-btn-dark">⚙️ Save &amp; Publish</button>
-                </form>
+           <!-- TAB 5: Add Parts with local device photo upload capabilities -->
+<div id="panel-parts" class="gg-panel">
+    <h6 class="gg-panel-title">Add New Spare Part</h6>
+    
+    <!-- Added enctype for processing raw file binaries -->
+    <form method="post" action="{% url 'add_part' %}" enctype="multipart/form-data" class="col-lg-6" id="addPartAdminForm">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label class="gg-field-label">Part Name *</label>
+            <input type="text" name="name" class="gg-input" placeholder="E.g., Maruti Swift Front Bumper" required>
+        </div>
+        <div class="row g-2 mb-3">
+            <div class="col-6">
+                <label class="gg-field-label">Type *</label>
+                <select name="type" class="gg-select">
+                    <option value="New">New</option>
+                    <option value="Used">Used</option>
+                </select>
             </div>
+            <div class="col-6">
+                <label class="gg-field-label">Compatibility</label>
+                <input type="text" name="compatibility" class="gg-input" placeholder="Maruti Swift (2018-2022)">
+            </div>
+        </div>
+        <div class="row g-2 mb-3">
+            <div class="col-6">
+                <label class="gg-field-label">Price (₹) *</label>
+                <input type="number" name="price" class="gg-input" required>
+            </div>
+            <div class="col-6">
+                <label class="gg-field-label">Stock Qty *</label>
+                <input type="number" name="quantity" class="gg-input" required>
+            </div>
+        </div>
 
+        <!-- NEW FIELD: Device File Gallery Direct Multi-Upload (No URL Links) -->
+        <div class="mb-3">
+            <label class="gg-field-label">Upload Spare Photos * (Max 4)</label>
+            <input type="file" name="part_photos" id="partPhotosField" class="gg-input" accept="image/*" multiple required>
+            <div class="form-text text-muted" style="font-size: 0.72rem; color: #888;">Select maximum 4 clear images of the part from your desktop/mobile.</div>
+        </div>
+
+        <div class="mb-3">
+            <label class="gg-field-label">Description</label>
+            <textarea name="description" class="gg-textarea" rows="2" placeholder="Describe the physical condition, brand details, or warranty of the part."></textarea>
+        </div>
+        
+        <button type="submit" class="gg-btn gg-btn-dark">⚙️ Save &amp; Publish</button>
+    </form>
+</div>
             <!-- TAB 6: Leads -->
             <div id="panel-leads" class="gg-panel">
                 <h6 class="gg-panel-title">Car Buyer Leads &amp; Commission</h6>
@@ -549,5 +555,14 @@
         document.getElementById('panel-' + tabId).classList.add('active');
         btn.classList.add('active');
     }
+
+    document.getElementById('addPartAdminForm').addEventListener('submit', function(e) {
+    var imagesInput = document.getElementById('partPhotosField');
+    if (imagesInput.files.length > 4) {
+        alert("Bhai, Spare parts ki maximum 4 images hi select kar sakte ho!");
+        e.preventDefault();
+        return false;
+    }
+});
 </script>
 {% endblock %}

@@ -19,7 +19,7 @@
             <div class="card card-garage h-100">
                 <div class="position-relative">
                     
-                    <!-- Carousel support for uploaded photos -->
+                    <!-- Multiple Photos Carousel Support -->
                     <div id="carouselPart{{ part.id }}" class="carousel slide" data-bs-ride="carousel">
                         <div class="carousel-inner">
                             {% for p in part.photos.all %}
@@ -29,7 +29,7 @@
                             {% empty %}
                             <div class="carousel-item active">
                                 <div class="bg-secondary text-white d-flex align-items-center justify-content-center" style="height: 180px;">
-                                    No Image Uploaded
+                                    No Image Available
                                 </div>
                             </div>
                             {% endfor %}
@@ -100,7 +100,7 @@
                             <div class="p-3 bg-light rounded text-center mb-3 border border-warning">
                                 <p class="small mb-1 fw-bold text-muted">📲 SCAN AND PAY VIA ANY UPI APP</p>
                                 
-                                <!-- Dynamic UPI QR Generator (garagego@ybl par automatic total price load ho jayega) -->
+                                <!-- Placeholder Scanner Image (Isme apna standard merchant QR laga lena) -->
                                 <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=garagego@ybl%26pn=GarageGo%26am={{ part.price }}" class="img-fluid rounded mb-2 border p-1 bg-white" style="max-height: 140px;" alt="UPI QR Code">
                                 
                                 <div class="text-dark small">
@@ -110,7 +110,7 @@
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label small fw-bold text-danger">Transaction ID /UPI Number or ID/ UTR *</label>
+                                <label class="form-label small fw-bold text-danger">Transaction ID / UTR *</label>
                                 <input type="text" name="transaction_id" class="form-control" placeholder="12 Digit Transaction No." required>
                             </div>
 
@@ -127,6 +127,7 @@
             </div>
         </div>
 
+        <!-- Dynamic Live Total Calculation script for each modal -->
         <script>
             function calcTotal{{ part.id }}() {
                 var qty = document.getElementById('qtyInput{{ part.id }}').value;

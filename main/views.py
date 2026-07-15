@@ -9,7 +9,7 @@ from .models import (
 )
 # Naye tables explicitly import kar rahe hain file handling ke liye
 from .models import CarPhoto, CarVideo 
-
+from .models import AutoPart, AutoPartPhoto, PartOrder
 # ============================================================
 # HELPERS
 # ============================================================
@@ -223,7 +223,25 @@ def create_booking(request):
 @login_required
 def user_dashboard(request):
     bookings = Booking.objects.filter(customer_contact=request.user.contact)
-    return render(request, 'main/user_dashboard.html', {'bookings': bookings})
+    
+    # ⚙️ User ke contacts se orders load karein (Using buyer_contact or buyer_name)
+    # Agar model me buyer_contact field h to sahi h, warna safe check ke liye hum mobile/username se check karenge
+    user_orders = PartOrder.objects.filter(
+        buyer_contact=request.user.contact
+    ).order_by('-order_date') if hasattr(PartOrder, 'buyer_contact') else PartOrder.objects.filter(
+        buyer_name=request.user.first_name if request.user.first_name else request.user.username
+    ).order_by('-order_date')
+
+    active_orders = [o for o in user_orders if o.status in ['Processing', 'Shipped']]
+    past_orders = [o for o in user_orders if o.status == 'Delivered']
+
+    context = {
+        'bookings': bookings,
+        'active_orders': active_orders,
+        'past_orders': past_orders,
+        'all_orders_count': len(user_orders)
+    }
+    return render(request, 'main/user_dashboard.html', context)
 
 
 @login_required
@@ -242,11 +260,26 @@ def mechanic_dashboard(request):
         })
     
     bookings = Booking.objects.filter(assigned_mechanic=mechanic)
-    return render(request, 'main/mechanic_dashboard.html', {
+    
+    # ⚙️ Mechanic ke order load karein (Agar mechanic ne workshop ke liye parts mangwaye hon)
+    mechanic_orders = PartOrder.objects.filter(
+        buyer_contact=request.user.contact
+    ).order_by('-order_date') if hasattr(PartOrder, 'buyer_contact') else PartOrder.objects.filter(
+        buyer_name=request.user.first_name if request.user.first_name else request.user.username
+    ).order_by('-order_date')
+
+    active_orders = [o for o in mechanic_orders if o.status in ['Processing', 'Shipped']]
+    past_orders = [o for o in mechanic_orders if o.status == 'Delivered']
+
+    context = {
         'mechanic': mechanic,
         'bookings': bookings,
-        'active_city': get_active_city(request)
-    })
+        'active_city': get_active_city(request),
+        'active_orders': active_orders,
+        'past_orders': past_orders,
+        'all_orders_count': len(mechanic_orders)
+    }
+    return render(request, 'main/mechanic_dashboard.html', context)
 
 
 @login_required
@@ -379,19 +412,26 @@ def update_order_status(request, order_id):
 @role_required(['admin'])
 def add_part(request):
     if request.method == 'POST':
-        AutoPart.objects.create(
+        # 1. Pehle base auto part info database me create karo
+        part = AutoPart.objects.create(
             name=request.POST.get('name'),
             description=request.POST.get('description', ''),
             type=request.POST.get('type', 'New'),
             compatibility=request.POST.get('compatibility', 'Universal'),
             price=request.POST.get('price'),
             quantity=request.POST.get('quantity'),
-            photo_url=request.POST.get('photo_url', '')
         )
-        messages.success(request, 'Naya part add ho gaya!')
+        
+        # 2. Files input se multiple images fetch karo (Name: part_photos)
+        images = request.FILES.getlist('part_photos')
+        
+        # Security check (Backend par bhi safety ke liye max 4 limit check lagate hai)
+        for img in images[:4]: 
+            AutoPartPhoto.objects.create(part=part, image=img)
+            
+        messages.success(request, 'Naya part and images add ho gayi hain!')
     
     return redirect('admin_dashboard')
-
 
 # ============================================================
 # MARKETPLACE (UPDATED FOR FILE UPLOADS)
@@ -483,25 +523,31 @@ def order_part(request, part_id):
     if request.method == 'POST':
         quantity = int(request.POST.get('quantity', 1))
         buyer_address = request.POST.get('buyer_address')
+        transaction_id = request.POST.get('transaction_id') # Get transaction ID from modal
         
         if part.quantity < quantity:
             messages.error(request, f'Sirf {part.quantity} pieces stock me hain!')
             return redirect('parts')
         
+        # Stock deduct karo
         part.quantity -= quantity
         part.save()
         
+        # Order details load karo
         PartOrder.objects.create(
-            buyer_name=request.user.first_name,
-            buyer_contact=request.user.contact,
+            buyer_name=request.user.first_name if request.user.first_name else request.user.username,
+            # Handle user profile custom attribute dynamically
+            buyer_contact=getattr(request.user, 'contact', 'N/A'), 
             buyer_address=buyer_address,
             part=part,
             part_name=part.name,
             quantity=quantity,
-            total_price=part.price * quantity
+            total_price=part.price * quantity,
+            transaction_id=transaction_id, # Save dynamic payment details
+            payment_status='Pending_Verification'
         )
         
-        messages.success(request, 'COD order placed! 1 hafte me delivery.')
+        messages.success(request, 'Order request received! Payment verify hote hi process shuru ho jayega.')
     
     return redirect('parts')
 

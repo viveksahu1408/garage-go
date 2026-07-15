@@ -184,7 +184,7 @@ class CarVideo(models.Model):
 
 
 class AutoPart(models.Model):
-    """Auto spare parts"""
+    """Auto spare parts - Pure Dynamic Image Support ke sath"""
     
     TYPE_CHOICES = [
         ('New', 'New'),
@@ -192,12 +192,12 @@ class AutoPart(models.Model):
     ]
     
     name = models.CharField(max_length=200)
-    description = models.TextField()
+    description = models.TextField(blank=True) # Description optional kar diya
     type = models.CharField(max_length=20, choices=TYPE_CHOICES, default='New')
-    compatibility = models.CharField(max_length=200)
+    compatibility = models.CharField(max_length=200, default='Universal')
     price = models.DecimalField(max_digits=10, decimal_places=2)
     quantity = models.PositiveIntegerField(default=0)
-    photo_url = models.URLField(max_length=500, blank=True)
+    # photo_url ko humne YAHA SE HATA DIYA HAI (Kyoki ab files direct upload hongi)
     created_at = models.DateTimeField(auto_now_add=True)
     
     def __str__(self):
@@ -207,8 +207,14 @@ class AutoPart(models.Model):
         ordering = ['-created_at']
 
 
+class AutoPartPhoto(models.Model):
+    """AutoPart ke liye multiple images upload karne ke liye (Max 4 handle views me hoga)"""
+    part = models.ForeignKey(AutoPart, on_delete=models.CASCADE, related_name='photos')
+    image = models.ImageField(upload_to='parts/')
+
+
 class PartOrder(models.Model):
-    """Spare parts COD order"""
+    """Spare parts UPI payment orders tracking"""
     
     STATUS_CHOICES = [
         ('Processing', 'Processing'),
@@ -223,6 +229,15 @@ class PartOrder(models.Model):
     part_name = models.CharField(max_length=200)
     quantity = models.PositiveIntegerField(default=1)
     total_price = models.DecimalField(max_digits=10, decimal_places=2)
+    
+    # NEW FIELDS: For UPI / QR Tracking instead of COD
+    transaction_id = models.CharField(
+        max_length=100, 
+        default='', 
+        help_text="UPI Transaction ID / UTR"
+    )    
+    payment_status = models.CharField(max_length=20, default='Pending_Verification') # Admin verifies UPI transaction
+
     order_date = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Processing')
     
@@ -231,6 +246,7 @@ class PartOrder(models.Model):
     
     class Meta:
         ordering = ['-order_date']
+
 
 
 class Inquiry(models.Model):
@@ -283,3 +299,4 @@ class City(models.Model):
 
     class Meta:
         verbose_name_plural = "Cities"
+

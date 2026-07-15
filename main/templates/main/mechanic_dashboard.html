@@ -28,7 +28,7 @@
         <div>
             <span class="badge bg-info text-dark mb-1">Verified Mechanic Active Workshop</span>
             <h4 class="fw-black mb-1">🔧 Workshop Orders Dashboard</h4>
-            <p class="text-muted small mb-0">Apne assigned repairs complete karein</p>
+            <p class="text-muted small mb-0">Apne assigned repairs aur spare part orders manage karein</p>
         </div>
         <div class="badge bg-light border text-dark px-3 py-2">
             🏡 {{ active_city }}
@@ -103,10 +103,80 @@
         </div>
         {% endfor %}
     {% else %}
-        <div class="card card-garage p-5 text-center">
-            <p class="text-muted">Abhi aapko koi job assign nahi kiya gaya hai.</p>
+        <div class="card card-garage p-4 text-center mb-4">
+            <p class="text-muted small mb-0">Abhi aapko koi repair job assign nahi kiya gaya hai.</p>
         </div>
     {% endif %}
+
+    <!-- ⚙️ Mechanic Auto Part Orders Tracking (Naya Section) -->
+    <h5 class="fw-bold mt-5 mb-3 border-bottom pb-2">⚙️ Workshop Spare Parts Orders ({{ active_orders|length|add:past_orders|length }})</h5>
+    
+    <div class="row">
+        <!-- Active Spare Parts Orders -->
+        <div class="col-lg-7 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-dark text-white py-2">
+                    <h6 class="mb-0 fw-bold small">🚚 Spare Parts Live Status</h6>
+                </div>
+                <div class="card-body">
+                    {% if active_orders %}
+                        {% for order in active_orders %}
+                        <div class="border rounded p-3 mb-2 bg-light">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="fw-bold text-primary small">#GG-{{ order.id }} - {{ order.part_name }}</span>
+                                {% if order.status == 'Processing' %}
+                                    <span class="badge bg-warning text-dark small">⏳ Processing</span>
+                                {% elif order.status == 'Shipped' %}
+                                    <span class="badge bg-info text-dark small">🚚 Shipped / Out for Delivery</span>
+                                {% endif %}
+                            </div>
+                            <div class="row small text-muted">
+                                <div class="col-6">Qty: <strong>{{ order.quantity }}</strong></div>
+                                <div class="col-6 text-end">Total: <strong class="text-success">₹{{ order.total_price|floatformat:0 }}</strong></div>
+                            </div>
+                            <!-- Progress Line -->
+                            <div class="progress mt-2" style="height: 6px;">
+                                {% if order.status == 'Processing' %}
+                                    <div class="progress-bar bg-warning" style="width: 50%"></div>
+                                {% elif order.status == 'Shipped' %}
+                                    <div class="progress-bar bg-info" style="width: 80%"></div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted text-center py-3 small mb-0">Aapki workshop ke liye koi active order abhi nahi hai.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- History of Spare Parts Orders -->
+        <div class="col-lg-5 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-secondary text-white py-2">
+                    <h6 class="mb-0 fw-bold small">🕒 Previous Spare Parts Purchased</h6>
+                </div>
+                <div class="card-body p-0">
+                    {% if past_orders %}
+                        <ul class="list-group list-group-flush small">
+                            {% for order in past_orders %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong class="text-dark">{{ order.part_name }}</strong><br>
+                                    <small class="text-muted">ID: #GG-{{ order.id }} | {{ order.order_date|date:"d M" }}</small>
+                                </div>
+                                <span class="badge bg-success">✅ Delivered</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted text-center py-4 small mb-0">Aapne abhi tak koi part delivery receive nahi kari hai.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
     {% endif %}
 </div>
 {% endblock %}
