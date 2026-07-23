@@ -2,6 +2,12 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+
+    path('about-us/', views.about_us, name='about_us'),
+    path('terms-and-conditions/', views.terms_and_conditions, name='terms_and_conditions'),
+    path('privacy-policy/', views.privacy_policy, name='privacy_policy'),
+    path('contact-us/', views.contact_us, name='contact_us'),
+
     # Auth
     path('login/', views.login_view, name='login'),
     path('register/', views.register_view, name='register'),

@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% block title %}Contact & Help Desk | GarageGo{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row g-4">
+        <!-- Contact Information -->
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-dark text-white h-100">
+                <h2 class="fw-bold mb-4">Get In Touch <span class="text-primary">.</span></h2>
+                <p class="text-white-50 mb-4">Have questions about your booking, spare parts availability, or garage partnership? Reach out to us directly!</p>
+
+                <div class="d-flex align-items-center mb-4">
+                    <div class="bg-primary text-white p-3 rounded-circle me-3">
+                        <i class="bi bi-telephone-fill fs-5"></i>
+                    </div>
+                    <div>
+                        <small class="text-white-50 d-block">Phone / WhatsApp</small>
+                        <strong class="fs-6">+91 7999182954</strong>
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-center mb-4">
+                    <div class="bg-primary text-white p-3 rounded-circle me-3">
+                        <i class="bi bi-envelope-fill fs-5"></i>
+                    </div>
+                    <div>
+                        <small class="text-white-50 d-block">Email Support</small>
+                        <strong class="fs-6">support@garagego.in</strong>
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-center mb-4">
+                    <div class="bg-primary text-white p-3 rounded-circle me-3">
+                        <i class="bi bi-geo-alt-fill fs-5"></i>
+                    </div>
+                    <div>
+                        <small class="text-white-50 d-block">Headquarters</small>
+                        <strong class="fs-6">Jabalpur Division, Madhya Pradesh</strong>
+                    </div>
+                </div>
+
+                <div class="mt-auto">
+                    <a href="https://wa.me/917999182954" target="_blank" class="btn btn-success w-100 rounded-pill py-2 fw-bold">
+                        <i class="bi bi-whatsapp me-2"></i> Chat Directly on WhatsApp
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Support Form -->
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white">
+                <h3 class="fw-bold mb-2">Send Us a Message</h3>
+                <p class="text-muted mb-4">Fill out the form below and our customer support team will get back to you within 2 hours.</p>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Your Full Name</label>
+                        <input type="text" name="name" class="form-control rounded-3 py-2" placeholder="e.g. Rahul Sharma" required>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small">Phone Number</label>
+                            <input type="tel" name="phone" class="form-control rounded-3 py-2" placeholder="10-digit mobile number" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small">Subject / Query Type</label>
+                            <select name="subject" class="form-select rounded-3 py-2">
+                                <option>Service Booking Query</option>
+                                <option>Spare Part Request / Enquiry</option>
+                                <option>Garage Partnership</option>
+                                <option>Complaint / Dispute</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold small">Message / Issue Details</label>
+                        <textarea name="message" class="form-control rounded-3" rows="4" placeholder="Describe your issue or vehicle service requirement..." required></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary rounded-pill px-4 py-2 fw-bold w-100">Submit Inquiry</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

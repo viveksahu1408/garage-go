@@ -18,6 +18,22 @@ from decimal import Decimal
 # HELPERS
 # ============================================================
 
+def about_us(request):
+    return render(request, 'main/about_us.html')
+
+def terms_and_conditions(request):
+    return render(request, 'main/terms.html')
+
+def privacy_policy(request):
+    return render(request, 'main/privacy.html')
+
+def contact_us(request):
+    if request.method == 'POST':
+        # Yahan message handle/save karne ka logic (optional)
+        from django.contrib import messages
+        messages.success(request, "Aapka message mil gaya hai! Hum jald hi aapse sampark karenge.")
+    return render(request, 'main/contact_us.html')
+
 def get_active_city(request):
     return request.session.get('garagego_city', 'Jabalpur')
 
@@ -591,3 +607,4 @@ def toggle_car_status(request, car_id):
     if request.user.role == 'mechanic':
         return redirect('mechanic_dashboard')
     return redirect('user_dashboard')
+
