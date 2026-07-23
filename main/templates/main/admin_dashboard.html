@@ -611,6 +611,55 @@
                 </form>
             </div>
 
+            <h4 class="fw-bold mt-4 mb-3">🛠️ Spare Part Requests (Jugad Leads)</h4>
+<div class="table-responsive">
+    <table class="table table-hover align-middle bg-white shadow-sm rounded-4">
+        <thead class="table-dark">
+            <tr>
+                <th>Customer</th>
+                <th>Car Details</th>
+                <th>Part Requested</th>
+                <th>Photo</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for req in part_requests %}
+            <tr>
+                <td><strong>{{ req.customer_name }}</strong><br><small>{{ req.customer_contact }}</small></td>
+                <td>{{ req.car_make_model }}</td>
+                <td>{{ req.part_name }} <span class="badge bg-secondary">{{ req.part_type }}</span></td>
+                <td>
+                    {% if req.sample_photo %}
+                    <a href="{{ req.sample_photo.url }}" target="_blank" class="btn btn-sm btn-outline-info">View Photo</a>
+                    {% else %}
+                    <span class="text-muted small">No photo</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <span class="badge {% if req.status == 'Arranged' %}bg-success{% elif req.status == 'Pending' %}bg-warning text-dark{% else %}bg-danger{% endif %}">
+                        {{ req.status }}
+                    </span>
+                </td>
+                <td>
+                    <form method="post" action="{% url 'update_part_request_status' req.id %}" class="d-inline">
+                        {% csrf_token %}
+                        <select name="status" onchange="this.form.submit()" class="form-select form-select-sm">
+                            <option value="Pending" {% if req.status == 'Pending' %}selected{% endif %}>Pending</option>
+                            <option value="Arranged" {% if req.status == 'Arranged' %}selected{% endif %}>Arranged</option>
+                            <option value="Unavailable" {% if req.status == 'Unavailable' %}selected{% endif %}>Unavailable</option>
+                        </select>
+                    </form>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" class="text-center text-muted">Koi part request nahi hai.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
             <!-- TAB 6: Leads -->
             <div id="panel-leads" class="gg-panel">
                 <h6 class="gg-panel-title">Car Buyer Leads &amp; Commission</h6>

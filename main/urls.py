@@ -45,5 +45,7 @@ urlpatterns = [
     # Parts
     path('part/<int:part_id>/order/', views.order_part, name='order_part'),
     path('car/status/<int:car_id>/', views.toggle_car_status, name='toggle_car_status'),
+    path('part-request/status/<int:req_id>/', views.update_part_request_status, name='update_part_request_status'),
+
 
 ]

@@ -58,6 +58,13 @@
             color: var(--primary-dark);
             padding-left: 12px;
         }
+
+        .brand-logo {
+            height: 50px;
+            width: auto;
+            object-fit: contain;
+            display: block;
+            }
         .btn-primary {
             background: var(--primary);
             border-color: var(--primary);
@@ -101,11 +108,11 @@
         }
         .social-btn:hover { background: var(--primary); transform: translateY(-3px); }
         
-        /* Floating WhatsApp Button */
+        /* Floating WhatsApp Button - FIXED bottom position */
         .whatsapp-float {
             position: fixed;
-            bottom: 25px;
-            right: 25px;
+            bottom: 85px;
+            right: 20px;
             background-color: #25d366;
             color: #FFF;
             border-radius: 50px;
@@ -124,6 +131,182 @@
             color: #fff;
         }
 
+        /* ============================================ */
+        /* CUSTOM MOBILE MENU DRAWER - Pure CSS/JS */
+        /* ============================================ */
+        .gg-drawer-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(31, 33, 48, 0.45);
+            z-index: 1040;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .gg-drawer-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .gg-drawer {
+            position: fixed;
+            top: 0;
+            right: -300px;
+            width: 280px;
+            height: 100%;
+            background: #fff;
+            z-index: 1050;
+            box-shadow: -4px 0 24px rgba(0,0,0,0.15);
+            transition: right 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .gg-drawer.active {
+            right: 0;
+        }
+
+        .gg-drawer-header {
+            padding: 18px 20px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+        .gg-drawer-header h5 {
+            margin: 0;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--text);
+        }
+        .gg-drawer-close {
+            background: none;
+            border: none;
+            font-size: 1.4rem;
+            color: #6B7280;
+            cursor: pointer;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: 0.2s;
+        }
+        .gg-drawer-close:hover {
+            background: #f3f4f6;
+            color: var(--text);
+        }
+
+        .gg-drawer-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px 0;
+        }
+
+        .gg-menu-link {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 20px;
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: background 0.2s;
+        }
+        .gg-menu-link:hover {
+            background: var(--primary-light);
+            color: var(--text);
+        }
+        .gg-menu-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            background: var(--primary-light);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+
+        .gg-menu-link-primary {
+            color: var(--primary) !important;
+            font-weight: 700 !important;
+        }
+        .gg-menu-link-primary .gg-menu-icon {
+            background: var(--primary-light);
+            color: var(--primary);
+        }
+        .gg-menu-link-primary:hover {
+            background: var(--primary-light) !important;
+        }
+
+        .gg-menu-link-danger {
+            color: #DC3545 !important;
+            font-weight: 700 !important;
+        }
+        .gg-menu-link-danger .gg-menu-icon {
+            background: #FEE2E2;
+            color: #DC3545;
+        }
+        .gg-menu-link-danger:hover {
+            background: #FEE2E2 !important;
+        }
+
+        .gg-menu-divider {
+            margin: 10px 20px;
+            border: none;
+            border-top: 1px solid #f0f0f0;
+        }
+        .gg-menu-user {
+            padding: 8px 20px;
+            font-size: 0.85rem;
+            color: var(--muted);
+        }
+        .gg-menu-user strong {
+            color: var(--text);
+        }
+
+        /* Hamburger button */
+        .gg-hamburger {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            border: 2px solid #6B7280;
+            background: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            cursor: pointer;
+            padding: 0;
+            transition: 0.2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .gg-hamburger:hover {
+            border-color: var(--primary);
+        }
+        .gg-hamburger span {
+            display: block;
+            width: 20px;
+            height: 2.5px;
+            background: var(--text);
+            border-radius: 2px;
+            transition: 0.3s;
+        }
+
+        body.drawer-open {
+            overflow: hidden;
+        }
+
         @media (max-width: 991px) {
             .navbar-gg .navbar-nav { gap: 0.5rem; padding-top: 0.75rem; }
         }
@@ -133,20 +316,92 @@
 <body>
 
 <!-- Floating WhatsApp Button -->
-<a href="https://wa.me/917999182954?text=Hi%20GarageGo,%20I%20need%20help%20with%20my%20car%20service." class="whatsapp-float" target="_blank" title="Chat on WhatsApp">
+<a href="https://wa.me/919300831785?text=Hi%20GarageGo,%20I%20need%20help%20with%20my%20car%20service." class="whatsapp-float" target="_blank" title="Chat on WhatsApp">
     <i class="bi bi-whatsapp"></i>
 </a>
+
+<!-- ============================================ -->
+<!-- CUSTOM MOBILE MENU DRAWER -->
+<!-- ============================================ -->
+<div class="gg-drawer-overlay" id="ggDrawerOverlay" onclick="closeDrawer()"></div>
+
+<div class="gg-drawer" id="ggDrawer">
+    <div class="gg-drawer-header">
+        <h5>Menu</h5>
+        <button class="gg-drawer-close" onclick="closeDrawer()" aria-label="Close">
+            <i class="bi bi-x-lg"></i>
+        </button>
+    </div>
+    <div class="gg-drawer-body">
+        <a href="{% url 'home' %}" class="gg-menu-link">
+            <span class="gg-menu-icon"><i class="bi bi-house-door-fill"></i></span>
+            Home
+        </a>
+        <a href="{% url 'marketplace' %}" class="gg-menu-link">
+            <span class="gg-menu-icon"><i class="bi bi-car-front-fill"></i></span>
+            Cars
+        </a>
+        <a href="{% url 'parts' %}" class="gg-menu-link">
+            <span class="gg-menu-icon"><i class="bi bi-gear-fill"></i></span>
+            Parts
+        </a>
+        <a href="{% url 'home' %}#servicesContainerBlock" class="gg-menu-link">
+            <span class="gg-menu-icon"><i class="bi bi-wrench-adjustable"></i></span>
+            Services
+        </a>
+        <a href="{% url 'about_us' %}" class="gg-menu-link">
+            <span class="gg-menu-icon"><i class="bi bi-info-circle-fill"></i></span>
+            About Us
+        </a>
+
+        <hr class="gg-menu-divider">
+
+        {% if user.is_authenticated %}
+            <div class="gg-menu-user">
+                Logged in as <strong>{{ user.first_name|default:user.username }}</strong>
+            </div>
+            
+            {% if user.role == 'admin' %}
+                <a href="{% url 'admin_dashboard' %}" class="gg-menu-link gg-menu-link-primary">
+                    <span class="gg-menu-icon"><i class="bi bi-speedometer2"></i></span>
+                    Admin Dashboard
+                </a>
+            {% elif user.role == 'mechanic' %}
+                <a href="{% url 'mechanic_dashboard' %}" class="gg-menu-link gg-menu-link-primary">
+                    <span class="gg-menu-icon"><i class="bi bi-shop"></i></span>
+                    Workshop
+                </a>
+            {% else %}
+                <a href="{% url 'user_dashboard' %}" class="gg-menu-link gg-menu-link-primary">
+                    <span class="gg-menu-icon"><i class="bi bi-calendar-check-fill"></i></span>
+                    My Bookings
+                </a>
+            {% endif %}
+            
+            <a href="{% url 'logout' %}" class="gg-menu-link gg-menu-link-danger">
+                <span class="gg-menu-icon"><i class="bi bi-box-arrow-right"></i></span>
+                Logout ({{ user.first_name|default:user.username }})
+            </a>
+        {% else %}
+            <div style="padding: 12px 20px;">
+                <a href="{% url 'login' %}" class="btn btn-primary w-100 rounded-pill fw-bold">Login / Sign Up</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
 
 <!-- Navigation Bar -->
 <nav class="navbar navbar-expand-lg navbar-gg sticky-top">
     <div class="container">
         <a class="navbar-brand" href="{% url 'home' %}">
-            <span class="brand-mark">🔧</span> GarageGo
+            <img src="https://i.postimg.cc/4dN9YxYg/YP-MART-removebg-preview.png" 
+                 alt="GarageGo Logo" 
+                 class="brand-logo">GarageGo
         </a>
 
-        <!-- Mobile City Picker + Toggler -->
-        <div class="d-flex align-items-center gap-2 order-lg-3">
-            <form method="post" action="{% url 'set_city' %}" class="d-flex d-lg-none">
+        <!-- Mobile: City Picker + Menu Button -->
+        <div class="d-flex align-items-center gap-2 d-lg-none">
+            <form method="post" action="{% url 'set_city' %}">
                 {% csrf_token %}
                 <select name="city" class="form-select form-select-sm form-select-city" onchange="this.form.submit()">
                     {% if cities %}
@@ -160,22 +415,24 @@
                     {% endif %}
                 </select>
             </form>
-            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
+            
+            <!-- Custom Hamburger Button -->
+            <button class="gg-hamburger" type="button" onclick="openDrawer()" aria-label="Open menu">
+                <span></span>
+                <span></span>
+                <span></span>
             </button>
         </div>
 
-        <!-- Main Links -->
-        <div class="collapse navbar-collapse order-lg-2" id="navbarNav">
-            <ul class="navbar-nav mx-lg-auto align-items-lg-center gap-lg-3">
+        <!-- Desktop Links -->
+        <div class="collapse navbar-collapse d-none d-lg-block" id="navbarNav">
+            <ul class="navbar-nav mx-auto align-items-center gap-3">
                 <li class="nav-item"><a class="nav-link" href="{% url 'home' %}">Home</a></li>
                 <li class="nav-item"><a class="nav-link" href="{% url 'marketplace' %}">Cars</a></li>
                 <li class="nav-item"><a class="nav-link" href="{% url 'parts' %}">Parts</a></li>
                 <li class="nav-item"><a class="nav-link" href="{% url 'home' %}#servicesContainerBlock">Services</a></li>
                 <li class="nav-item"><a class="nav-link text-primary fw-bold" href="{% url 'about_us' %}">About Us</a></li>
-
-                <!-- Desktop City Picker -->
-                <li class="nav-item d-none d-lg-block">
+                <li class="nav-item">
                     <form method="post" action="{% url 'set_city' %}" class="d-flex align-items-center gap-2">
                         {% csrf_token %}
                         <select name="city" class="form-select form-select-sm form-select-city" onchange="this.form.submit()">
@@ -194,8 +451,8 @@
             </ul>
         </div>
 
-        <!-- Auth Actions (Desktop) -->
-        <div class="d-none d-lg-flex align-items-center gap-2 order-lg-3">
+        <!-- Desktop Auth Actions -->
+        <div class="d-none d-lg-flex align-items-center gap-2">
             <a href="{% url 'home' %}#serviceSearch" class="search-icon-link" title="Search"><i class="bi bi-search"></i></a>
             {% if user.is_authenticated %}
                 {% if user.role == 'admin' %}
@@ -209,22 +466,6 @@
                 <a href="{% url 'logout' %}" class="btn btn-sm btn-outline-danger">Logout</a>
             {% else %}
                 <a href="{% url 'login' %}" class="btn btn-sm btn-primary px-3">Login / Sign Up</a>
-            {% endif %}
-        </div>
-
-        <!-- Mobile Auth Actions -->
-        <div class="d-lg-none w-100 mt-2 order-lg-2">
-            {% if user.is_authenticated %}
-                {% if user.role == 'admin' %}
-                    <a class="btn btn-sm btn-outline-primary w-100 mb-2" href="{% url 'admin_dashboard' %}">Admin Dashboard</a>
-                {% elif user.role == 'mechanic' %}
-                    <a class="btn btn-sm btn-outline-primary w-100 mb-2" href="{% url 'mechanic_dashboard' %}">Workshop</a>
-                {% else %}
-                    <a class="btn btn-sm btn-outline-primary w-100 mb-2" href="{% url 'user_dashboard' %}">My Bookings</a>
-                {% endif %}
-                <a href="{% url 'logout' %}" class="btn btn-sm btn-outline-danger w-100">Logout ({{ user.first_name|default:user.username }})</a>
-            {% else %}
-                <a href="{% url 'login' %}" class="btn btn-sm btn-primary w-100">Login / Sign Up</a>
             {% endif %}
         </div>
     </div>
@@ -254,7 +495,7 @@
             <!-- Col 1: About Company -->
             <div class="col-lg-4 col-md-6">
                 <h5 class="text-white fw-bold mb-3"><span class="brand-mark d-inline-block bg-primary text-white px-2 py-1 rounded me-1">🔧</span> GarageGo</h5>
-                <p class="small text-muted">GarageGo is your trusted multi-brand car care aggregator platform connecting car owners with verified local workshops & certified mechanics.</p>
+                <p class="small text-white">GarageGo is your trusted multi-brand car care aggregator platform connecting car owners with verified local workshops & certified mechanics.</p>
                 <div class="d-flex align-items-center gap-2 mt-3">
                     <span class="badge bg-secondary text-light fw-normal p-2">GST Registered</span>
                     <span class="badge bg-success text-light fw-normal p-2">100% Verified Garages</span>
@@ -286,21 +527,21 @@
             <!-- Col 4: Connect & Support -->
             <div class="col-lg-3 col-md-6">
                 <h6>Connect With Us</h6>
-                <p class="small text-muted mb-2"><i class="bi bi-geo-alt text-primary"></i> Head Office: Jabalpur Division, M.P.</p>
-                <p class="small text-muted mb-3"><i class="bi bi-telephone text-primary"></i> Support: +91 7999182954</p>
+                <p class="small text-white mb-2"><i class="bi bi-geo-alt text-primary"></i> Head Office: Jabalpur Division, M.P.</p>
+                <p class="small text-white mb-3"><i class="bi bi-telephone text-primary"></i> Support: +91 9300831785</p>
                 
                 <div class="d-flex">
                     <a href="#" class="social-btn"><i class="bi bi-instagram"></i></a>
                     <a href="#" class="social-btn"><i class="bi bi-facebook"></i></a>
                     <a href="#" class="social-btn"><i class="bi bi-youtube"></i></a>
-                    <a href="https://wa.me/917999182954" target="_blank" class="social-btn"><i class="bi bi-whatsapp"></i></a>
+                    <a href="https://wa.me/919300831785" target="_blank" class="social-btn"><i class="bi bi-whatsapp"></i></a>
                 </div>
             </div>
         </div>
 
         <hr style="border-color: rgba(255,255,255,0.1);">
 
-        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center small text-muted">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center small text-warning">
             <p class="mb-0">© 2026 GarageGo Automotive Technologies Inc. All Rights Reserved.</p>
             <p class="mb-0">Designed for Seamless Car Care Services</p>
         </div>
@@ -308,6 +549,36 @@
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Custom Drawer JavaScript -->
+<script>
+    function openDrawer() {
+        document.getElementById('ggDrawer').classList.add('active');
+        document.getElementById('ggDrawerOverlay').classList.add('active');
+        document.body.classList.add('drawer-open');
+    }
+
+    function closeDrawer() {
+        document.getElementById('ggDrawer').classList.remove('active');
+        document.getElementById('ggDrawerOverlay').classList.remove('active');
+        document.body.classList.remove('drawer-open');
+    }
+
+    // Close drawer on Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeDrawer();
+        }
+    });
+
+    // Close drawer when clicking on any link inside drawer
+    document.querySelectorAll('.gg-drawer-body a.gg-menu-link').forEach(function(link) {
+        link.addEventListener('click', function() {
+            closeDrawer();
+        });
+    });
+</script>
+
 {% block extra_js %}{% endblock %}
 </body>
 </html>

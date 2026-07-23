@@ -11,6 +11,7 @@ from .models import (
 from .models import CarPhoto, CarVideo 
 from .models import AutoPart, AutoPartPhoto, PartOrder
 from decimal import Decimal
+from .models import PartRequest # <--- Add this
 
 
 
@@ -322,6 +323,8 @@ def admin_dashboard(request):
         'orders': PartOrder.objects.all(),
         'inquiries': Inquiry.objects.all(),
         'parts': AutoPart.objects.all(),
+        # context dict me ye add karo:
+        'part_requests': PartRequest.objects.all()
     }
     return render(request, 'main/admin_dashboard.html', context)
 
@@ -608,3 +611,59 @@ def toggle_car_status(request, car_id):
         return redirect('mechanic_dashboard')
     return redirect('user_dashboard')
 
+
+def parts_view(request):
+    search_query = request.GET.get('q', '')
+    part_type = request.GET.get('type', '')
+    
+    parts = AutoPart.objects.all()
+
+    if search_query:
+        parts = parts.filter(
+            Q(name__icontains=search_query) | 
+            Q(compatibility__icontains=search_query) | 
+            Q(description__icontains=search_query)
+        )
+    if part_type:
+        parts = parts.filter(type=part_type)
+
+    # Jugad / Custom Part Request handle karne ke liye
+    if request.method == 'POST' and 'request_part_submit' in request.POST:
+        customer_name = request.POST.get('customer_name')
+        customer_contact = request.POST.get('customer_contact')
+        car_make_model = request.POST.get('car_make_model')
+        part_name = request.POST.get('part_name')
+        part_type_req = request.POST.get('part_type', 'Any')
+        description = request.POST.get('description', '')
+        sample_photo = request.FILES.get('sample_photo')
+
+        PartRequest.objects.create(
+            user=request.user if request.user.is_authenticated else None,
+            customer_name=customer_name,
+            customer_contact=customer_contact,
+            car_make_model=car_make_model,
+            part_name=part_name,
+            part_type=part_type_req,
+            description=description,
+            sample_photo=sample_photo
+        )
+        messages.success(request, "Aapki Part Request submit ho gayi hai! Humare team 2-4 ghante me aapse contact karegi.")
+        return redirect('parts')
+
+    return render(request, 'main/parts.html', {
+        'parts': parts,
+        'search_query': search_query,
+        'part_type': part_type
+    })
+
+# Admin status update handler for Part Requests
+@login_required
+@role_required(['admin'])
+def update_part_request_status(request, req_id):
+    part_req = get_object_or_404(PartRequest, id=req_id)
+    status = request.POST.get('status')
+    if status in ['Pending', 'Arranged', 'Unavailable']:
+        part_req.status = status
+        part_req.save()
+        messages.success(request, f"Request status changed to {status}")
+    return redirect('admin_dashboard')

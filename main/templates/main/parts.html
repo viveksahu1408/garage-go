@@ -1,146 +1,210 @@
 {% extends 'base.html' %}
-{% block title %}Auto Spares - GarageGo{% endblock %}
+{% block title %}Auto Spares & Custom Search - GarageGo{% endblock %}
 
 {% block content %}
-<div class="container">
-    <!-- Banner: Clean & Secure Payment Information -->
-    <div class="card border-0 mb-4 text-white" style="background: linear-gradient(135deg, #1e3a5f, #0f172a);">
-        <div class="card-body p-4">
-            <span class="badge bg-warning text-dark mb-2">⚡ Secure UPI Payment Enabled</span>
-            <h4 class="fw-black mb-1">⚙️ Genuine Auto Spares & Accessories</h4>
-            <p class="text-white-50 small mb-0">Direct Jabalpur warehouse delivery. Scan QR or transfer via UPI to instant-confirm your order.</p>
+<div class="container py-4">
+    <!-- Top Header Banner -->
+    <div class="card border-0 mb-4 text-white rounded-4 shadow-sm" style="background: linear-gradient(135deg, #1e3a5f, #0f172a);">
+        <div class="card-body p-4 p-md-5">
+            <span class="badge bg-warning text-dark fw-bold mb-2">⚡ Verified Genuine Parts</span>
+            <h2 class="fw-bold mb-2">⚙️ Auto Spare Parts & Jugad Desk</h2>
+            <p class="text-white-50 mb-0">Original OEM/OES spares delivered straight to your garage. Catalog me part na mile toh direct request karein!</p>
+        </div>
+    </div>
+
+    <!-- Search & Filters Row + Request Trigger -->
+    <div class="row g-3 mb-4 align-items-center">
+        <div class="col-md-7">
+            <form method="get" action="{% url 'parts' %}" class="row g-2">
+                <div class="col-8 col-sm-8">
+                    <input type="text" name="q" value="{{ search_query }}" class="form-control rounded-pill" placeholder="Search by car, e.g. Swift, Bumper, Filter...">
+                </div>
+                <div class="col-4 col-sm-4">
+                    <select name="type" class="form-select rounded-pill" onchange="this.form.submit()">
+                        <option value="">All Types</option>
+                        <option value="New" {% if part_type == 'New' %}selected{% endif %}>New Only</option>
+                        <option value="Used" {% if part_type == 'Used' %}selected{% endif %}>Used/Old</option>
+                    </select>
+                </div>
+            </form>
+        </div>
+        <div class="col-md-5 text-md-end">
+            <button class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#requestPartModal">
+                <i class="bi bi-tools me-1"></i> Part Na Mile? Jugad Request Karein
+            </button>
         </div>
     </div>
 
     <!-- Parts Grid -->
-    <div class="row g-4">
+    <div class="row g-4 mb-5">
         {% for part in parts %}
         <div class="col-md-6 col-lg-4">
-            <div class="card card-garage h-100">
+            <div class="card card-garage h-100 border-0 shadow-sm rounded-4 overflow-hidden">
                 <div class="position-relative">
-                    
-                    <!-- Carousel support for uploaded photos -->
                     <div id="carouselPart{{ part.id }}" class="carousel slide" data-bs-ride="carousel">
                         <div class="carousel-inner">
                             {% for p in part.photos.all %}
                             <div class="carousel-item {% if forloop.first %}active{% endif %}">
-                                <img src="{{ p.image.url }}" class="card-img-top" style="height: 180px; object-fit: cover;" alt="{{ part.name }}">
+                                <img src="{{ p.image.url }}" class="card-img-top" style="height: 200px; object-fit: cover;" alt="{{ part.name }}">
                             </div>
                             {% empty %}
                             <div class="carousel-item active">
-                                <div class="bg-secondary text-white d-flex align-items-center justify-content-center" style="height: 180px;">
+                                <div class="bg-secondary text-white d-flex align-items-center justify-content-center" style="height: 200px;">
                                     No Image Uploaded
                                 </div>
                             </div>
                             {% endfor %}
                         </div>
-                        {% if part.photos.all|length > 1 %}
-                        <button class="carousel-control-prev" type="button" data-bs-target="#carouselPart{{ part.id }}" data-bs-slide="prev">
-                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                        </button>
-                        <button class="carousel-control-next" type="button" data-bs-target="#carouselPart{{ part.id }}" data-bs-slide="next">
-                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                        </button>
-                        {% endif %}
                     </div>
-
-                    <span class="position-absolute top-0 start-0 m-2 badge {% if part.type == 'New' %}bg-success{% else %}bg-warning text-dark{% endif %}">
-                        {{ part.type }} SPARE
+                    <span class="position-absolute top-0 start-0 m-3 badge {% if part.type == 'New' %}bg-success{% else %}bg-warning text-dark{% endif %} rounded-pill px-3 py-2">
+                        {{ part.type }}
                     </span>
-                    <span class="position-absolute bottom-0 end-0 m-2 badge bg-dark text-warning">₹{{ part.price|floatformat:0 }}</span>
+                    <span class="position-absolute bottom-0 end-0 m-3 badge bg-dark text-warning fs-6 px-3 py-2 rounded-pill">₹{{ part.price|floatformat:0 }}</span>
                 </div>
-                <div class="card-body d-flex flex-column">
-                    <h6 class="fw-black small text-uppercase">{{ part.name }}</h6>
-                    <p class="text-primary small fw-bold mb-1">⚙️ {{ part.compatibility }}</p>
-                    <p class="text-muted small flex-grow-1" style="font-size: 0.8rem;">{{ part.description|truncatewords:15 }}</p>
+                <div class="card-body d-flex flex-column p-4">
+                    <h5 class="fw-bold mb-1">{{ part.name }}</h5>
+                    <p class="text-primary small fw-bold mb-2"><i class="bi bi-car-front-fill me-1"></i> {{ part.compatibility }}</p>
+                    <p class="text-muted small flex-grow-1 mb-3">{{ part.description|truncatewords:12 }}</p>
                     
-                    <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
-                        <span class="text-muted small">Stock: {% if part.quantity > 0 %}{{ part.quantity }} left{% else %}⚠️ Out of Stock{% endif %}</span>
+                    <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                        <span class="text-muted small">Stock: {% if part.quantity > 0 %}<strong class="text-success">{{ part.quantity }}</strong>{% else %}<span class="text-danger">Out of Stock</span>{% endif %}</span>
                         {% if part.quantity > 0 and user.is_authenticated %}
-                        <button class="btn btn-warning btn-sm fw-bold text-dark" data-bs-toggle="modal" data-bs-target="#orderModal{{ part.id }}">🛒 SECURE BUY</button>
+                        <button class="btn btn-warning btn-sm fw-bold px-3 rounded-pill text-dark" data-bs-toggle="modal" data-bs-target="#orderModal{{ part.id }}">🛒 SECURE BUY</button>
                         {% elif not user.is_authenticated %}
-                        <a href="{% url 'login' %}" class="btn btn-outline-secondary btn-sm fw-bold">🔑 LOGIN</a>
+                        <a href="{% url 'login' %}" class="btn btn-outline-secondary btn-sm rounded-pill fw-bold">🔑 LOGIN</a>
                         {% else %}
-                        <button class="btn btn-secondary btn-sm fw-bold" disabled>SOLD OUT</button>
+                        <button class="btn btn-secondary btn-sm rounded-pill fw-bold" disabled>SOLD OUT</button>
                         {% endif %}
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Order Modal with Secure QR Code & UPI Payment Details -->
+        <!-- Checkout Order Modal -->
         {% if part.quantity > 0 %}
         <div class="modal fade" id="orderModal{{ part.id }}" tabindex="-1">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header bg-dark text-white">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content rounded-4 border-0">
+                    <div class="modal-header bg-dark text-white rounded-top-4">
                         <h6 class="modal-title fw-bold">💳 Secure UPI Checkout</h6>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                     </div>
                     <form method="post" action="{% url 'order_part' part.id %}">
                         {% csrf_token %}
-                        <div class="modal-body">
-                            <div class="alert alert-info small">
+                        <div class="modal-body p-4">
+                            <div class="alert alert-info small mb-3">
                                 <strong>{{ part.name }}</strong><br>
                                 Price: ₹{{ part.price|floatformat:0 }} per unit
                             </div>
-                            
                             <div class="row g-2 mb-3">
                                 <div class="col-6">
                                     <label class="form-label small fw-bold">Quantity *</label>
-                                    <input type="number" id="qtyInput{{ part.id }}" name="quantity" class="form-control" value="1" min="1" max="{{ part.quantity }}" required oninput="calcTotal{{ part.id }}()">
+                                    <input type="number" id="qtyInput{{ part.id }}" name="quantity" class="form-control rounded-3" value="1" min="1" max="{{ part.quantity }}" required oninput="calcTotal{{ part.id }}()">
                                 </div>
                                 <div class="col-6">
                                     <label class="form-label small fw-bold">Total Amount</label>
-                                    <div class="form-control bg-light fw-bold text-center text-success" id="totalBox{{ part.id }}">₹{{ part.price|floatformat:0 }}</div>
+                                    <div class="form-control bg-light fw-bold text-center text-success rounded-3" id="totalBox{{ part.id }}">₹{{ part.price|floatformat:0 }}</div>
                                 </div>
                             </div>
-
-                            <!-- UPI Payment Scan Area -->
-                            <div class="p-3 bg-light rounded text-center mb-3 border border-warning">
-                                <p class="small mb-1 fw-bold text-muted">📲 SCAN AND PAY VIA ANY UPI APP</p>
-                                
-                                <!-- Dynamic UPI QR Generator (garagego@ybl par automatic total price load ho jayega) -->
-                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=garagego@ybl%26pn=GarageGo%26am={{ part.price }}" class="img-fluid rounded mb-2 border p-1 bg-white" style="max-height: 140px;" alt="UPI QR Code">
-                                
-                                <div class="text-dark small">
-                                    UPI ID: <strong class="text-primary select-all">garagego@ybl</strong> <br>
-                                    <small class="text-muted text-center d-block">Pay karke transaction/UTR ID niche fill karein verification ke liye.</small>
-                                </div>
+                            <div class="p-3 bg-light rounded-3 text-center mb-3 border border-warning">
+                                <p class="small mb-1 fw-bold text-muted">📲 SCAN AND PAY VIA UPI</p>
+                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=garagego@ybl%26pn=GarageGo%26am={{ part.price }}" class="img-fluid rounded mb-2 border p-1 bg-white" style="max-height: 130px;" alt="UPI QR Code">
+                                <div class="text-dark small">UPI ID: <strong class="text-primary">garagego@ybl</strong></div>
                             </div>
-
                             <div class="mb-3">
-                                <label class="form-label small fw-bold text-danger">Transaction ID /UPI Number or ID/ UTR *</label>
-                                <input type="text" name="transaction_id" class="form-control" placeholder="12 Digit Transaction No." required>
+                                <label class="form-label small fw-bold text-danger">Transaction / UTR ID *</label>
+                                <input type="text" name="transaction_id" class="form-control rounded-3" placeholder="12 Digit Transaction No." required>
                             </div>
-
                             <div class="mb-3">
                                 <label class="form-label small fw-bold">Delivery Address *</label>
-                                <textarea name="buyer_address" class="form-control" rows="2" placeholder="Full delivery location where parts should be shipped..." required></textarea>
+                                <textarea name="buyer_address" class="form-control rounded-3" rows="2" placeholder="Full delivery location..." required></textarea>
                             </div>
                         </div>
-                        <div class="modal-footer">
-                            <button type="submit" class="btn btn-warning text-dark fw-bold w-100">🚀 PLACE SECURE ORDER</button>
+                        <div class="modal-footer border-0 p-4 pt-0">
+                            <button type="submit" class="btn btn-warning text-dark fw-bold w-100 rounded-pill py-2">🚀 PLACE SECURE ORDER</button>
                         </div>
                     </form>
                 </div>
             </div>
         </div>
-
         <script>
             function calcTotal{{ part.id }}() {
                 var qty = document.getElementById('qtyInput{{ part.id }}').value;
                 var basePrice = {{ part.price }};
-                var total = qty * basePrice;
-                document.getElementById('totalBox{{ part.id }}').innerText = "₹" + total;
+                document.getElementById('totalBox{{ part.id }}').innerText = "₹" + (qty * basePrice);
             }
         </script>
         {% endif %}
         {% empty %}
         <div class="col-12 text-center py-5">
-            <p class="text-muted">No parts available in catalog.</p>
+            <h5 class="text-muted mb-3">Koi spare part match nahi hua.</h5>
+            <button class="btn btn-primary rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#requestPartModal">
+                Part Requirement Form Bharein
+            </button>
         </div>
         {% endfor %}
+    </div>
+</div>
+
+<!-- 🛠️ SPARE PART JUGAD / CUSTOM REQUEST MODAL -->
+<div class="modal fade" id="requestPartModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0">
+            <div class="modal-header bg-dark text-white rounded-top-4">
+                <h5 class="modal-title fw-bold"><i class="bi bi-tools text-warning me-2"></i> Custom Spare Part Request</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input type="hidden" name="request_part_submit" value="1">
+                <div class="modal-body p-4">
+                    <p class="text-muted small mb-3">Durlabh ya purani gadi ka part chahiye? Humare vendor network se khoj kar aapko best rate par arranged karwayenge.</p>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Aapka Naam *</label>
+                        <input type="text" name="customer_name" class="form-control rounded-3" value="{% if user.is_authenticated %}{{ user.first_name }}{% endif %}" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Mobile / WhatsApp No. *</label>
+                        <input type="tel" name="customer_contact" class="form-control rounded-3" value="{% if user.is_authenticated %}{{ user.contact }}{% endif %}" required>
+                    </div>
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-8">
+                            <label class="form-label fw-bold small">Gadi ka Model aur Year *</label>
+                            <input type="text" name="car_make_model" class="form-control rounded-3" placeholder="e.g. Maruti Swift 2017 Petrol" required>
+                        </div>
+                        <div class="col-4">
+                            <label class="form-label fw-bold small">Part Preference</label>
+                            <select name="part_type" class="form-select rounded-3">
+                                <option value="Any">Koi bhi</option>
+                                <option value="New">New Only</option>
+                                <option value="Used">Used/Second Hand</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Part ka Naam / Details *</label>
+                        <input type="text" name="part_name" class="form-control rounded-3" placeholder="e.g. Left Front Headlight / ECM Box" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Purane Part ki Photo (Optional)</label>
+                        <input type="file" name="sample_photo" class="form-control rounded-3" accept="image/*">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Additional Notes (Optional)</label>
+                        <textarea name="description" class="form-control rounded-3" rows="2" placeholder="Koi specific company ya details..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-4 pt-0">
+                    <button type="submit" class="btn btn-primary rounded-pill w-100 py-2 fw-bold">Submit Request</button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 {% endblock %}

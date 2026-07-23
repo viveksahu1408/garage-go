@@ -300,3 +300,28 @@ class City(models.Model):
     class Meta:
         verbose_name_plural = "Cities"
 
+class PartRequest(models.Model):
+    """Customer rare spare part requests / Jugad system"""
+    STATUS_CHOICES = [
+        ('Pending', 'Pending Search'),
+        ('Arranged', 'Arranged / Contacted'),
+        ('Unavailable', 'Not Available'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='part_requests', null=True, blank=True)
+    customer_name = models.CharField(max_length=100)
+    customer_contact = models.CharField(max_length=15)
+    car_make_model = models.CharField(max_length=200, help_text="e.g. Maruti Swift 2018 Petrol")
+    part_name = models.CharField(max_length=200, help_text="e.g. Left Side Headlight Assembly")
+    part_type = models.CharField(max_length=20, choices=[('New', 'New'), ('Used', 'Used / Second Hand'), ('Any', 'Any')], default='Any')
+    description = models.TextField(blank=True, help_text="Part details, OEM number, etc.")
+    sample_photo = models.ImageField(upload_to='part_requests/', blank=True, null=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Request #{self.id} - {self.part_name} for {self.car_make_model}"
+
+    class Meta:
+        ordering = ['-created_at']        
+
