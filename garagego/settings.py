@@ -16,7 +16,7 @@ SECRET_KEY = 'django-insecure-19-blhy=8geo4ipgk6mmxa2$)mo##ophcda!*)nf=m(+ax*yuz
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['garagego.in', 'www.garagego.in', '72.60.233.98', 'localhost', '127.0.0.1']
 
 # Application definition
 
@@ -134,3 +134,9 @@ MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+
+
+
+#  PrinceMart#2025
+#  GarageGo#2025
