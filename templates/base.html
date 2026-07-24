@@ -89,13 +89,13 @@
 
         /* Footer Styling */
         footer.footer-gg {
-            background: #11131F;
+            background: #18141e;
             color: #9CA3AF;
             padding-top: 3.5rem;
             padding-bottom: 1.5rem;
         }
         footer.footer-gg h6 { color: #fff; font-weight: 700; margin-bottom: 1.2rem; }
-        footer.footer-gg a { color: #9CA3AF; text-decoration: none; font-size: 0.9rem; transition: 0.2s; }
+        footer.footer-gg a { color: #f4f8dd; text-decoration: none; font-size: 0.9rem; transition: 0.2s; }
         footer.footer-gg a:hover { color: #fff; text-decoration: underline; }
         .social-btn {
             width: 36px; height: 36px;
@@ -494,7 +494,13 @@
         <div class="row g-4 mb-4">
             <!-- Col 1: About Company -->
             <div class="col-lg-4 col-md-6">
-                <h5 class="text-white fw-bold mb-3"><span class="brand-mark d-inline-block bg-primary text-white px-2 py-1 rounded me-1">🔧</span> GarageGo</h5>
+                <a class="navbar-brand" href="{% url 'home' %}">
+            <img src="https://i.postimg.cc/qqsjp7Sk/YP-MART.jpg" 
+                 alt="GarageGo Logo" 
+                 class="brand-logo">
+                 
+        </a>
+                <h5 class="text-white fw-bold mb-3"> GarageGo</h5>
                 <p class="small text-white">GarageGo is your trusted multi-brand car care aggregator platform connecting car owners with verified local workshops & certified mechanics.</p>
                 <div class="d-flex align-items-center gap-2 mt-3">
                     <span class="badge bg-secondary text-light fw-normal p-2">GST Registered</span>

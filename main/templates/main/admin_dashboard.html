@@ -173,13 +173,13 @@
     .gg-row {
         display: flex;
         justify-content: space-between;
-        align-items: center;
+        align-items: flex-start;
         flex-wrap: wrap;
         gap: 14px;
         padding: 16px;
         border: 1px solid var(--gg-border);
         border-radius: 12px;
-        margin-bottom: 10px;
+        margin-bottom: 12px;
         transition: box-shadow 0.15s ease, border-color 0.15s ease;
     }
     .gg-row:hover { border-color: var(--gg-primary); box-shadow: 0 4px 14px rgba(61,46,124,0.08); }
@@ -237,11 +237,12 @@
         background: #fff;
         border: 1px solid var(--gg-border);
         color: var(--gg-text);
-        border-radius: 9px;
+        border-radius: 99px;
         padding: 9px 12px;
         font-size: 0.87rem;
         font-family: 'Poppins', sans-serif;
     }
+    .gg-input, .gg-textarea { border-radius: 9px; }
     .gg-input:focus, .gg-select:focus, .gg-textarea:focus {
         outline: none;
         border-color: var(--gg-primary);
@@ -264,6 +265,16 @@
 
     .gg-empty { color: var(--gg-text-faint); font-size: 0.85rem; font-style: italic; }
 
+    /* Reviews Styling */
+    .gg-feedback-quote {
+        background: #f8f9fa;
+        border-left: 4px solid var(--gg-orange);
+        padding: 8px 12px;
+        border-radius: 0 8px 8px 0;
+        font-style: italic;
+        color: #333;
+    }
+
     @media (max-width: 767px) {
         .gg-stats { grid-template-columns: repeat(2, 1fr); }
         .gg-readout { text-align: left; }
@@ -272,7 +283,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="container">
+<div class="container py-4">
 <div class="gg-admin">
 
     <!-- Header -->
@@ -325,11 +336,12 @@
     <div class="gg-shell">
         <div class="gg-tabs">
             <button class="gg-tab active" onclick="switchTab(this, 'mechanics')">🔧 Verify Mechanics ({{ stats.pending_mechanics }})</button>
+            <button class="gg-tab" onclick="switchTab(this, 'reviews')">⭐ Customer Ratings & Reviews</button>
             <button class="gg-tab" onclick="switchTab(this, 'cars')">🚗 Used Cars ({{ stats.pending_cars }})</button>
-            <button class="gg-tab" onclick="switchTab(this, 'bookings')">🧼 Assign Bookings</button>
+            <button class="gg-tab" onclick="switchTab(this, 'bookings')">🧼 Assign / Override Bookings</button>
             <button class="gg-tab" onclick="switchTab(this, 'orders')">🛒 Spares Orders ({{ stats.total_orders }})</button>
             <button class="gg-tab" onclick="switchTab(this, 'parts')">➕ Add Parts</button>
-            <button class="gg-tab" onclick="switchTab(this, 'leads')">💰 Leads</button>
+            <button class="gg-tab" onclick="switchTab(this, 'leads')">💰 Leads & Jugad Requests</button>
         </div>
 
         <div class="gg-body">
@@ -337,17 +349,24 @@
             <div id="panel-mechanics" class="gg-panel active">
                 <h6 class="gg-panel-title">Mechanic Approval Requests</h6>
                 {% for mech in mechanics %}
-                <div class="gg-row">
-                    <div>
+                <div class="gg-row flex-column flex-md-row">
+                    <div class="w-100">
                         <div class="d-flex align-items-center gap-2 flex-wrap">
                             <span class="gg-row-title">{{ mech.name }} | "{{ mech.shop_name }}"</span>
                             <span class="gg-chip {% if mech.status == 'Active' %}gg-chip-green{% else %}gg-chip-orange{% endif %}">{{ mech.status }}</span>
+                            
+                            <!-- ⭐ REVIEWS & RATING BADGE -->
+                            <span class="badge bg-warning text-dark border">
+                                ⭐ {% if mech.avg_rating %}{{ mech.avg_rating|floatformat:1 }}{% else %}{{ mech.rating|default:"0.0" }}{% endif %}
+                                <span class="fw-normal">({{ mech.total_reviews|default:0 }} reviews)</span>
+                            </span>
                         </div>
-                        <p class="gg-row-meta">📞 {{ mech.contact }} | 📍 {{ mech.city }}</p>
+                        <p class="gg-row-meta mt-1">📞 {{ mech.contact }} | 📍 {{ mech.city }}</p>
                         <p class="gg-row-meta">🛡️ {{ mech.id_card }} | 📜 {{ mech.certifications|join:", " }}</p>
                     </div>
+
                     {% if mech.status == 'Pending' %}
-                    <div class="d-flex gap-2">
+                    <div class="d-flex gap-2 align-self-start mt-2 mt-md-0">
                         <form method="post" action="{% url 'approve_mechanic' mech.id %}" class="d-inline">
                             {% csrf_token %}
                             <input type="hidden" name="status" value="Active">
@@ -366,7 +385,71 @@
                 {% endfor %}
             </div>
 
-            <!-- TAB 2: Used Cars (AB APNE SAHI PANEL ME HAI!) -->
+            <!-- TAB 2 (NEW): CUSTOMER RATINGS & REVIEWS -->
+            <div id="panel-reviews" class="gg-panel">
+                <h6 class="gg-panel-title">⭐ Customer Ratings & Feedback Details</h6>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle bg-white rounded border">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Booking ID</th>
+                                <th>Customer Details</th>
+                                <th>Garage / Mechanic</th>
+                                <th>Service Done</th>
+                                <th>Rating</th>
+                                <th>Feedback / Review</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for booking in bookings %}
+                                {% if booking.rating or booking.feedback %}
+                                <tr>
+                                    <td><strong>#{{ booking.id }}</strong></td>
+                                    <td>
+                                        <strong>{{ booking.customer_name }}</strong><br>
+                                        <small class="text-muted">📞 {{ booking.customer_contact }}</small>
+                                    </td>
+                                    <td>
+                                        {% if booking.assigned_mechanic %}
+                                            <span class="fw-bold text-dark">{{ booking.assigned_mechanic.name }}</span><br>
+                                            <small class="text-muted">🏬 {{ booking.assigned_mechanic.shop_name }}</small>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Unassigned</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="fw-semibold">{{ booking.service_category }}</span><br>
+                                        <small class="text-muted">🚗 {{ booking.car_details }}</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-warning text-dark fs-6">
+                                            ⭐ {{ booking.rating|default:"N/A" }}/5
+                                        </span>
+                                    </td>
+                                    <td style="max-width: 300px;">
+                                        {% if booking.feedback %}
+                                            <div class="gg-feedback-quote small">
+                                                "{{ booking.feedback }}"
+                                            </div>
+                                        {% else %}
+                                            <span class="text-muted small fst-italic">Only rating given (No written comments)</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endif %}
+                            {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted py-4">
+                                        Abhi tak kisi customer ne service complete hone par rating/review nahi diya hai.
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TAB 3: Used Cars -->
             <div id="panel-cars" class="gg-panel">
                 <h6 class="gg-panel-title">Used Car Listing Approvals</h6>
                 <div class="table-responsive">
@@ -506,25 +589,36 @@
                 </div>
             </div>
 
-            <!-- TAB 3: Assign Bookings -->
+            <!-- TAB 4: Assign Bookings -->
             <div id="panel-bookings" class="gg-panel">
-                <h6 class="gg-panel-title">Assign Repair Bookings to City Mechanics</h6>
+                <h6 class="gg-panel-title">Manage Service Bookings & Manual Mechanic Assignment</h6>
                 {% for booking in bookings %}
-                    {% if booking.status == 'Pending Assignment' %}
                     <div class="gg-row">
                         <div>
-                            <span class="gg-chip gg-chip-purple">{{ booking.service_category }}</span>
-                            <h6 class="gg-row-title mt-1 mb-0">{{ booking.service_subtype }}</h6>
-                            <p class="gg-row-meta">🚗 {{ booking.car_details }} | 📍 {{ booking.city }}</p>
+                            <span class="gg-chip {% if booking.status == 'Broadcasting' %}gg-chip-orange{% else %}gg-chip-purple{% endif %}">
+                                {{ booking.status }}
+                            </span>
+                            <h6 class="gg-row-title mt-1 mb-0">{{ booking.service_category }} - {{ booking.service_subtype }}</h6>
+                            <p class="gg-row-meta">🚗 {{ booking.car_details }} | 📍 {{ booking.city }} | 👤 {{ booking.customer_name }} ({{ booking.customer_contact }})</p>
+                            <p class="gg-row-meta text-primary fw-bold mb-0">
+                                {% if booking.assigned_mechanic %}
+                                    🔧 Assigned to: {{ booking.assigned_mechanic.name }} ({{ booking.assigned_mechanic.shop_name }})
+                                {% else %}
+                                    ⚡ Status: Broadcasting to nearby mechanics in {{ booking.city }}
+                                {% endif %}
+                            </p>
                         </div>
                         <div style="min-width: 320px;">
-                            <label class="gg-field-label">Select Mechanic in "{{ booking.city }}"</label>
+                            <label class="gg-field-label">Assign / Override Mechanic in "{{ booking.city }}"</label>
                             <form method="post" action="{% url 'assign_booking' booking.id %}" class="d-flex gap-2">
                                 {% csrf_token %}
-                                <select name="mechanic_id" class="gg-select">
+                                <select name="mechanic_id" class="gg-select" required>
+                                    <option value="">-- Choose Mechanic --</option>
                                     {% for mech in mechanics %}
                                         {% if mech.city == booking.city and mech.status == 'Active' %}
-                                        <option value="{{ mech.id }}">{{ mech.name }} ({{ mech.shop_name }})</option>
+                                        <option value="{{ mech.id }}" {% if booking.assigned_mechanic.id == mech.id %}selected{% endif %}>
+                                            {{ mech.name }} ({{ mech.shop_name }}) - ⭐ {% if mech.avg_rating %}{{ mech.avg_rating|floatformat:1 }}{% else %}{{ mech.rating|default:"0.0" }}{% endif %}
+                                        </option>
                                         {% endif %}
                                     {% endfor %}
                                 </select>
@@ -532,13 +626,12 @@
                             </form>
                         </div>
                     </div>
-                    {% endif %}
                 {% empty %}
-                <p class="gg-empty">No pending bookings.</p>
+                <p class="gg-empty">No bookings found.</p>
                 {% endfor %}
             </div>
 
-            <!-- TAB 4: Orders -->
+            <!-- TAB 5: Orders -->
             <div id="panel-orders" class="gg-panel">
                 <h6 class="gg-panel-title">Spares COD Deliveries</h6>
                 {% for order in orders %}
@@ -562,7 +655,7 @@
                 {% endfor %}
             </div>
 
-            <!-- TAB 5: Add Parts with local device photo upload capabilities -->
+            <!-- TAB 6: Add Parts -->
             <div id="panel-parts" class="gg-panel">
                 <h6 class="gg-panel-title">Add New Spare Part</h6>
                 
@@ -599,70 +692,21 @@
                     <div class="mb-3">
                         <label class="gg-field-label">Upload Spare Photos * (Max 4)</label>
                         <input type="file" name="part_photos" id="partPhotosField" class="gg-input" accept="image/*" multiple required>
-                        <div class="form-text text-muted" style="font-size: 0.72rem; color: #888;">Select maximum 4 clear images of the part from your desktop/mobile.</div>
+                        <div class="form-text text-muted" style="font-size: 0.72rem; color: #888;">Select maximum 4 clear images of the part from your device.</div>
                     </div>
 
                     <div class="mb-3">
                         <label class="gg-field-label">Description</label>
-                        <textarea name="description" class="gg-textarea" rows="2" placeholder="Describe the physical condition, brand details, or warranty of the part."></textarea>
+                        <textarea name="description" class="gg-textarea" rows="2" placeholder="Describe physical condition, brand details, or warranty."></textarea>
                     </div>
                     
                     <button type="submit" class="gg-btn gg-btn-dark">⚙️ Save &amp; Publish</button>
                 </form>
             </div>
 
-            <h4 class="fw-bold mt-4 mb-3">🛠️ Spare Part Requests (Jugad Leads)</h4>
-<div class="table-responsive">
-    <table class="table table-hover align-middle bg-white shadow-sm rounded-4">
-        <thead class="table-dark">
-            <tr>
-                <th>Customer</th>
-                <th>Car Details</th>
-                <th>Part Requested</th>
-                <th>Photo</th>
-                <th>Status</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for req in part_requests %}
-            <tr>
-                <td><strong>{{ req.customer_name }}</strong><br><small>{{ req.customer_contact }}</small></td>
-                <td>{{ req.car_make_model }}</td>
-                <td>{{ req.part_name }} <span class="badge bg-secondary">{{ req.part_type }}</span></td>
-                <td>
-                    {% if req.sample_photo %}
-                    <a href="{{ req.sample_photo.url }}" target="_blank" class="btn btn-sm btn-outline-info">View Photo</a>
-                    {% else %}
-                    <span class="text-muted small">No photo</span>
-                    {% endif %}
-                </td>
-                <td>
-                    <span class="badge {% if req.status == 'Arranged' %}bg-success{% elif req.status == 'Pending' %}bg-warning text-dark{% else %}bg-danger{% endif %}">
-                        {{ req.status }}
-                    </span>
-                </td>
-                <td>
-                    <form method="post" action="{% url 'update_part_request_status' req.id %}" class="d-inline">
-                        {% csrf_token %}
-                        <select name="status" onchange="this.form.submit()" class="form-select form-select-sm">
-                            <option value="Pending" {% if req.status == 'Pending' %}selected{% endif %}>Pending</option>
-                            <option value="Arranged" {% if req.status == 'Arranged' %}selected{% endif %}>Arranged</option>
-                            <option value="Unavailable" {% if req.status == 'Unavailable' %}selected{% endif %}>Unavailable</option>
-                        </select>
-                    </form>
-                </td>
-            </tr>
-            {% empty %}
-            <tr><td colspan="6" class="text-center text-muted">Koi part request nahi hai.</td></tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
-
-            <!-- TAB 6: Leads -->
+            <!-- TAB 7: Leads & Jugad Requests -->
             <div id="panel-leads" class="gg-panel">
-                <h6 class="gg-panel-title">Car Buyer Leads &amp; Commission</h6>
+                <h6 class="gg-panel-title">Car Buyer Leads & Commission</h6>
                 {% for inq in inquiries %}
                 <div class="gg-row" style="display:block;">
                     <div class="row g-3">
@@ -685,14 +729,63 @@
                             <div class="gg-lead-block gg-lead-orange">
                                 <span class="gg-chip gg-chip-orange">Commission</span>
                                 <p class="gg-row-title mt-2 mb-1">2% Platform Fee:</p>
-                                <p class="gg-price" style="font-size:1.2rem;">₹{{ inq.car.price|floatformat:0|add:0|floatformat:0 }}</p>
+                                <p class="gg-price" style="font-size:1.2rem;">₹{{ inq.car.price|floatformat:0 }}</p>
                             </div>
                         </div>
                     </div>
                 </div>
                 {% empty %}
-                <p class="gg-empty">No inquiries yet.</p>
+                <p class="gg-empty mb-4">No car buyer inquiries yet.</p>
                 {% endfor %}
+
+                <h6 class="gg-panel-title mt-5">🛠️ Spare Part Requests (Jugad Leads)</h6>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle bg-white shadow-sm rounded-3">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Customer</th>
+                                <th>Car Details</th>
+                                <th>Part Requested</th>
+                                <th>Photo</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for req in part_requests %}
+                            <tr>
+                                <td><strong>{{ req.customer_name }}</strong><br><small class="text-muted">{{ req.customer_contact }}</small></td>
+                                <td>{{ req.car_make_model }}</td>
+                                <td>{{ req.part_name }} <span class="badge bg-secondary">{{ req.part_type }}</span></td>
+                                <td>
+                                    {% if req.sample_photo %}
+                                    <a href="{{ req.sample_photo.url }}" target="_blank" class="btn btn-sm btn-outline-info py-0">View Photo</a>
+                                    {% else %}
+                                    <span class="text-muted small">No photo</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge {% if req.status == 'Arranged' %}bg-success{% elif req.status == 'Pending' %}bg-warning text-dark{% else %}bg-danger{% endif %}">
+                                        {{ req.status }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <form method="post" action="{% url 'update_part_request_status' req.id %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <select name="status" onchange="this.form.submit()" class="form-select form-select-sm">
+                                            <option value="Pending" {% if req.status == 'Pending' %}selected{% endif %}>Pending</option>
+                                            <option value="Arranged" {% if req.status == 'Arranged' %}selected{% endif %}>Arranged</option>
+                                            <option value="Unavailable" {% if req.status == 'Unavailable' %}selected{% endif %}>Unavailable</option>
+                                        </select>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="6" class="text-center text-muted py-3">Koi part request nahi hai.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>

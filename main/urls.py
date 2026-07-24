@@ -47,5 +47,7 @@ urlpatterns = [
     path('car/status/<int:car_id>/', views.toggle_car_status, name='toggle_car_status'),
     path('part-request/status/<int:req_id>/', views.update_part_request_status, name='update_part_request_status'),
 
+    path('booking/<int:booking_id>/accept-instant/', views.accept_booking_instant, name='accept_booking_instant'),
+    path('booking/<int:booking_id>/feedback/', views.submit_booking_feedback, name='submit_booking_feedback'),
 
 ]

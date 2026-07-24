@@ -13,14 +13,14 @@
         </div>
     </div>
 
-    <!-- Booking section -->
+    <!-- Live Service Bookings Section -->
     <h5 class="fw-bold mb-3 border-bottom pb-2">🧼 Live Car Service Bookings ({{ bookings|length }})</h5>
     
     {% if bookings %}
         {% for booking in bookings %}
-        <div class="card card-garage mb-3">
+        <div class="card card-garage mb-3 shadow-sm border-0">
             <div class="card-body">
-                <div class="row align-items-center">
+                <div class="row align-items-center mb-3">
                     <div class="col-md-3">
                         <span class="badge bg-secondary" style="font-size: 0.65rem;">{{ booking.service_category }}</span>
                         <h6 class="fw-bold small mt-1 mb-0">{{ booking.service_subtype }}</h6>
@@ -31,25 +31,78 @@
                         <p class="text-muted small mb-0">📅 {{ booking.booking_time|date:"d M Y, h:i A" }}</p>
                     </div>
                     <div class="col-md-3">
-                        <p class="text-muted small mb-1">Assigned Mechanic:</p>
+                        <p class="text-muted small mb-1">Assigned Mechanic / Shop:</p>
                         <p class="fw-bold small mb-0">
                             {% if booking.assigned_mechanic %}
-                            🔧 {{ booking.assigned_mechanic.name }}
+                                🔧 {{ booking.assigned_mechanic.name }} ({{ booking.assigned_mechanic.shop_name }})
                             {% else %}
-                            ⏱️ Assigning soon...
+                                <span class="text-warning fw-bold">⚡ Searching Nearby Mechanics...</span>
                             {% endif %}
                         </p>
                     </div>
                     <div class="col-md-3 text-md-end">
-                        <span class="badge-status 
+                        <span class="badge 
                             {% if booking.status == 'Completed' %}bg-success
                             {% elif booking.status == 'Work in Progress' %}bg-primary
-                            {% elif booking.status == 'Rejected' %}bg-danger
-                            {% else %}bg-warning text-dark{% endif %}">
+                            {% elif booking.status == 'Assigned' %}bg-info text-dark
+                            {% elif booking.status == 'Broadcasting' %}bg-warning text-dark
+                            {% else %}bg-secondary{% endif %} px-3 py-2">
                             {{ booking.status }}
                         </span>
                     </div>
                 </div>
+
+                <!-- 🚨 Assigned Mechanic Details Card (Jab Accept / Assign Ho Jaye) -->
+                {% if booking.assigned_mechanic %}
+                <div class="alert alert-light border rounded-3 p-3 mb-2 small">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <strong class="text-dark">👨‍🔧 Assigned Workshop Info:</strong><br>
+                            <span>{{ booking.assigned_mechanic.shop_name }} - {{ booking.assigned_mechanic.city }}</span>
+                        </div>
+                        <div class="col-md-4 text-md-end mt-2 mt-md-0">
+                            <a href="tel:{{ booking.assigned_mechanic.contact }}" class="btn btn-outline-success btn-sm fw-bold rounded-pill">
+                                📞 Call Mechanic ({{ booking.assigned_mechanic.contact }})
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- ⭐ Customer Star Rating & Review Form (Completed Status Par) -->
+                {% if booking.status == 'Completed' %}
+                <div class="border-top pt-3 mt-2">
+                    {% if booking.rating %}
+                    <div class="text-success small fw-bold">
+                        <span>⭐ Rating Given: {{ booking.rating }}/5 Stars</span>
+                        {% if booking.feedback %}<p class="text-muted fw-normal mb-0 mt-1">"{{ booking.feedback }}"</p>{% endif %}
+                    </div>
+                    {% else %}
+                    <form method="post" action="{% url 'submit_booking_feedback' booking.id %}" class="bg-light p-3 rounded-3">
+                        {% csrf_token %}
+                        <h6 class="fw-bold small mb-2 text-dark">⭐ Rate Mechanic Work & Give Feedback</h6>
+                        <div class="row g-2 align-items-center mb-2">
+                            <div class="col-auto">
+                                <label class="small fw-bold">Rating:</label>
+                            </div>
+                            <div class="col-auto">
+                                <select name="rating" class="form-select form-select-sm" required>
+                                    <option value="5">⭐⭐⭐⭐⭐ (5/5) Excellent</option>
+                                    <option value="4">⭐⭐⭐⭐ (4/5) Very Good</option>
+                                    <option value="3">⭐⭐⭐ (3/5) Average</option>
+                                    <option value="2">⭐⭐ (2/5) Poor</option>
+                                    <option value="1">⭐ (1/5) Very Bad</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-2">
+                            <textarea name="feedback" class="form-control form-control-sm" rows="2" placeholder="Mechanic ka kaam kaisa tha? Apka anubhav likhein..." required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-sm fw-bold rounded-pill px-3">Submit Feedback</button>
+                    </form>
+                    {% endif %}
+                </div>
+                {% endif %}
             </div>
         </div>
         {% endfor %}
@@ -60,7 +113,7 @@
         </div>
     {% endif %}
 
-    <!-- ⚙️ Dynamic Auto Part Orders Section -->
+    <!-- ⚙️ Spare Part Orders Section -->
     <h5 class="fw-bold mt-5 mb-3 border-bottom pb-2">⚙️ My Spare Parts Orders ({{ active_orders|length|add:past_orders|length }})</h5>
     
     <div class="row">
@@ -86,7 +139,6 @@
                                 <div class="col-6">Qty: <strong>{{ order.quantity }}</strong></div>
                                 <div class="col-6 text-end">Total: <strong class="text-success">₹{{ order.total_price|floatformat:0 }}</strong></div>
                             </div>
-                            <!-- Progress Tracker Line -->
                             <div class="progress mt-2" style="height: 6px;">
                                 {% if order.status == 'Processing' %}
                                     <div class="progress-bar bg-warning" style="width: 50%"></div>
@@ -102,82 +154,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- 🚗 My Listed Cars Section -->
-<div class="card shadow-sm border-0 mt-4 p-4">
-    <h5 class="fw-bold mb-3 text-dark">🚗 My Listed Cars for Sale ({{ my_cars|length }})</h5>
-    
-    {% if my_cars %}
-    <div class="table-responsive">
-        <table class="table align-middle table-hover">
-            <thead class="table-light">
-                <tr class="small text-muted">
-                    <th>Car Details</th>
-                    <th>Price</th>
-                    <th>City</th>
-                    <th>Live Status</th>
-                    <th class="text-end">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for car in my_cars %}
-                <tr>
-                    <td>
-                        <div class="d-flex align-items-center">
-                            {% if car.photos.all %}
-                                <img src="{{ car.photos.first.image.url }}" class="rounded me-2" style="width: 50px; height: 40px; object-fit: cover;">
-                            {% endif %}
-                            <div>
-                                <h6 class="mb-0 fw-bold">{{ car.make }} {{ car.model }}</h6>
-                                <small class="text-muted">{{ car.year }} | {{ car.fuel_type }} | {{ car.kms }} kms</small>
-                            </div>
-                        </div>
-                    </td>
-                    <td><strong class="text-success">₹{{ car.price }}</strong></td>
-                    <td>{{ car.seller_city|default:"Not Set" }}</td>
-                    <td>
-                        {% if car.status == 'Pending' %}
-                            <span class="badge bg-warning text-dark">⏳ Pending Approval</span>
-                        {% elif car.status == 'Approved' %}
-                            <span class="badge bg-success">✅ Live on Market</span>
-                        {% elif car.status == 'Rejected' %}
-                            <span class="badge bg-danger">❌ Cancelled/Rejected</span>
-                        {% elif car.status == 'Sold' %}
-                            <span class="badge bg-dark">🤝 Sold Out</span>
-                        {% endif %}
-                    </td>
-                    <td class="text-end">
-                        {% if car.status == 'Approved' or car.status == 'Pending' %}
-                        <div class="d-inline-flex gap-1">
-                            <!-- Mark as Sold -->
-                            <form method="post" action="{% url 'toggle_car_status' car.id %}" onsubmit="return confirm('Kya sach me car bik gayi hai? Iske baad ye website se hat jayegi.');">
-                                {% csrf_token %}
-                                <input type="hidden" name="action" value="sold">
-                                <button type="submit" class="btn btn-sm btn-success py-1 fw-bold">🤝 Mark Sold</button>
-                            </form>
-                            <!-- Cancel/Remove listing -->
-                            <form method="post" action="{% url 'toggle_car_status' car.id %}" onsubmit="return confirm('Kya aap is listing ko marketplace se hatana chahte hain?');">
-                                {% csrf_token %}
-                                <input type="hidden" name="action" value="cancel">
-                                <button type="submit" class="btn btn-sm btn-outline-danger py-1 fw-bold">❌ Remove</button>
-                            </form>
-                        </div>
-                        {% else %}
-                            <span class="text-muted small">No action available</span>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    {% else %}
-    <div class="text-center py-4 bg-light rounded border border-dashed">
-        <p class="text-muted mb-2">Aapne abhi tak koi car sell ke liye list nahi kari hai.</p>
-        <a href="{% url 'marketplace' %}" class="btn btn-sm btn-dark fw-bold">➕ List My Car Now</a>
-    </div>
-    {% endif %}
-</div>
 
         <!-- Order History Column -->
         <div class="col-lg-5 mb-4">
@@ -204,6 +180,80 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- 🚗 My Listed Cars Section -->
+    <div class="card shadow-sm border-0 mt-2 p-4">
+        <h5 class="fw-bold mb-3 text-dark">🚗 My Listed Cars for Sale ({{ my_cars|length }})</h5>
+        
+        {% if my_cars %}
+        <div class="table-responsive">
+            <table class="table align-middle table-hover">
+                <thead class="table-light">
+                    <tr class="small text-muted">
+                        <th>Car Details</th>
+                        <th>Price</th>
+                        <th>City</th>
+                        <th>Live Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for car in my_cars %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                {% if car.photos.all %}
+                                    <img src="{{ car.photos.first.image.url }}" class="rounded me-2" style="width: 50px; height: 40px; object-fit: cover;">
+                                {% endif %}
+                                <div>
+                                    <h6 class="mb-0 fw-bold">{{ car.make }} {{ car.model }}</h6>
+                                    <small class="text-muted">{{ car.year }} | {{ car.fuel_type }} | {{ car.kms }} kms</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td><strong class="text-success">₹{{ car.price }}</strong></td>
+                        <td>{{ car.seller_city|default:"Not Set" }}</td>
+                        <td>
+                            {% if car.status == 'Pending' %}
+                                <span class="badge bg-warning text-dark">⏳ Pending Approval</span>
+                            {% elif car.status == 'Approved' %}
+                                <span class="badge bg-success">✅ Live on Market</span>
+                            {% elif car.status == 'Rejected' %}
+                                <span class="badge bg-danger">❌ Cancelled/Rejected</span>
+                            {% elif car.status == 'Sold' %}
+                                <span class="badge bg-dark">🤝 Sold Out</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            {% if car.status == 'Approved' or car.status == 'Pending' %}
+                            <div class="d-inline-flex gap-1">
+                                <form method="post" action="{% url 'toggle_car_status' car.id %}" onsubmit="return confirm('Kya sach me car bik gayi hai? Iske baad ye website se hat jayegi.');">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="sold">
+                                    <button type="submit" class="btn btn-sm btn-success py-1 fw-bold">🤝 Mark Sold</button>
+                                </form>
+                                <form method="post" action="{% url 'toggle_car_status' car.id %}" onsubmit="return confirm('Kya aap is listing ko marketplace se hatana chahte hain?');">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="cancel">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger py-1 fw-bold">❌ Remove</button>
+                                </form>
+                            </div>
+                            {% else %}
+                                <span class="text-muted small">No action available</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-4 bg-light rounded border border-dashed">
+            <p class="text-muted mb-2">Aapne abhi tak koi car sell ke liye list nahi kari hai.</p>
+            <a href="{% url 'marketplace' %}" class="btn btn-sm btn-dark fw-bold">➕ List My Car Now</a>
+        </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

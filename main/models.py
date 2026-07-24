@@ -63,15 +63,14 @@ class Mechanic(models.Model):
 
 
 class Booking(models.Model):
-    """Service booking"""
+    """Service booking with Ola/Uber Style Dispatch & Feedback"""
     
     STATUS_CHOICES = [
-        ('Pending Assignment', 'Pending Assignment'),
-        ('Assigned', 'Assigned'),
-        ('Accepted', 'Accepted'),
+        ('Broadcasting', 'Searching Mechanics (Broadcasting)'),
+        ('Assigned', 'Assigned / Accepted'),
         ('Work in Progress', 'Work in Progress'),
         ('Completed', 'Completed'),
-        ('Rejected', 'Rejected'),
+        ('Cancelled', 'Cancelled'),
     ]
     
     customer_name = models.CharField(max_length=100)
@@ -82,15 +81,22 @@ class Booking(models.Model):
     price = models.CharField(max_length=100, default='Quote basis')
     city = models.CharField(max_length=50)
     booking_time = models.DateTimeField()
-    status = models.CharField(max_length=30, choices=STATUS_CHOICES, default='Pending Assignment')
+    status = models.CharField(max_length=40, choices=STATUS_CHOICES, default='Broadcasting')
+    
     assigned_mechanic = models.ForeignKey(
-        Mechanic, on_delete=models.SET_NULL, null=True, blank=True, related_name='bookings'
+        'Mechanic', on_delete=models.SET_NULL, null=True, blank=True, related_name='bookings'
     )
+    
+    # --- NEW FEEDBACK & RATING FIELDS ---
+    rating = models.PositiveIntegerField(null=True, blank=True, help_text="Rating from 1 to 5")
+    feedback = models.TextField(blank=True, null=True, help_text="Customer feedback for mechanic")
+    feedback_date = models.DateTimeField(null=True, blank=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
     def __str__(self):
-        return f"#{self.id} - {self.service_category} for {self.customer_name}"
+        return f"#{self.id} - {self.service_category} ({self.city}) - Status: {self.status}"
     
     class Meta:
         ordering = ['-created_at']
