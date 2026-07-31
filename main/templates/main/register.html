@@ -2,98 +2,184 @@
 {% block title %}Register - GarageGo{% endblock %}
 
 {% block content %}
-<div class="container">
+<div class="container my-4">
     <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card card-garage overflow-hidden">
+        <div class="col-md-7 col-lg-6">
+            <div class="card card-garage border-0 shadow-lg rounded-4 overflow-hidden">
                 <div class="card-header bg-dark text-white text-center py-4">
-                    <h4 class="fw-black mb-1">📝 Naya Portal Registration</h4>
-                    <p class="text-white-50 small mb-0">Role chunein aur apni information register karein</p>
+                    <h4 class="fw-bold mb-1">📝 Naya Account Banayein</h4>
+                    <p class="text-white-50 small mb-0">Aap kaun hain? Niche diye gaye option me se ek chunein</p>
                 </div>
                 <div class="card-body p-4">
-                    <div class="d-flex gap-2 bg-light p-1 rounded mb-4">
-                        <button type="button" id="btnCustomer" class="btn btn-sm flex-fill fw-bold btn-dark" onclick="setRole('user')">🙋‍♂️ CUSTOMER</button>
-                        <button type="button" id="btnMechanic" class="btn btn-sm flex-fill fw-bold btn-outline-secondary" onclick="setRole('mechanic')">🔧 MECHANIC</button>
+                    
+                    <!-- 🌟 VISUAL ROLE SELECTOR (EASY TO UNDERSTAND) -->
+                    <label class="form-label small fw-bold text-uppercase text-muted mb-2">Aapka Role Kya Hai? *</label>
+                    <div class="row g-3 mb-4">
+                        <div class="col-6">
+                            <div id="cardCustomer" class="p-3 border rounded-3 text-center cursor-pointer shadow-sm position-relative role-card active-role" onclick="setRole('user')" style="cursor: pointer; transition: all 0.2s ease;">
+                                <div class="fs-1 mb-1">🙋‍♂️</div>
+                                <div class="fw-bold text-dark fs-6">Customer</div>
+                                <div class="text-muted extra-small" style="font-size: 0.75rem;">(Gadi Malik)</div>
+                                <span id="badgeCust" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-success">
+                                    ✓ Selected
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div id="cardMechanic" class="p-3 border rounded-3 text-center cursor-pointer shadow-sm position-relative role-card" onclick="setRole('mechanic')" style="cursor: pointer; transition: all 0.2s ease;">
+                                <div class="fs-1 mb-1">🔧</div>
+                                <div class="fw-bold text-dark fs-6">Mechanic</div>
+                                <div class="text-muted extra-small" style="font-size: 0.75rem;">(Garage / Dukaan)</div>
+                                <span id="badgeMech" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-success d-none">
+                                    ✓ Selected
+                                </span>
+                            </div>
+                        </div>
                     </div>
 
-                    <form method="post" id="regForm">
+                    <form method="post" id="regForm" enctype="multipart/form-data">
                         {% csrf_token %}
                         <input type="hidden" name="role" id="roleInput" value="user">
                         
+                        <!-- COMMON USER FIELDS -->
                         <div class="mb-3">
-                            <label class="form-label small fw-bold text-muted">Apna Pura Naam *</label>
-                            <input type="text" name="name" class="form-control" placeholder="E.g., Subhash Sen" required>
+                            <label class="form-label small fw-bold text-muted">Apna Pura Naam (Full Name) *</label>
+                            <input type="text" name="name" class="form-control form-control-lg fs-6" placeholder="Jaise: Ramesh Kumar" required>
                         </div>
                         
                         <div class="mb-3">
-                            <label class="form-label small fw-bold text-muted">Contact WhatsApp Number *</label>
-                            <input type="tel" name="contact" class="form-control" placeholder="E.g., 9112233445" required>
+                            <label class="form-label small fw-bold text-muted">WhatsApp Mobile Number *</label>
+                            <input type="tel" name="contact" class="form-control form-control-lg fs-6" placeholder="Jaise: 98260XXXXX" required>
                         </div>
                         
                         <div class="mb-3">
                             <label class="form-label small fw-bold text-muted">Password *</label>
-                            <input type="password" name="password" class="form-control" placeholder="Minimum 4 characters" required>
+                            <input type="password" name="password" class="form-control form-control-lg fs-6" placeholder="Naya Password banayein" required>
                         </div>
                         
-                        <div id="mechFields" class="d-none border-top pt-3 mt-3">
-                            <h6 class="fw-bold text-primary mb-3">🏢 Mechanic Garage Details</h6>
+                        <!-- MECHANIC EXTRA FIELDS -->
+                        <div id="mechFields" class="d-none border-top pt-3 mt-3 bg-light p-3 rounded-3 border">
+                            <div class="d-flex align-items-center mb-3">
+                                <span class="fs-4 me-2">🏢</span>
+                                <h6 class="fw-bold text-primary mb-0">Garage / Workshop Ki Jankari</h6>
+                            </div>
+                            
                             <div class="row g-2 mb-3">
-                                <div class="col-6">
-                                    <label class="form-label small fw-bold text-muted">Workshop Name *</label>
+                                <div class="col-12 col-md-6 mb-2 mb-md-0">
+                                    <label class="form-label small fw-bold text-muted">Garage Ka Naam (Workshop Name) *</label>
                                     <input type="text" name="shop_name" class="form-control" placeholder="E.g., Sen Motors">
                                 </div>
-                                <div class="col-6">
-                                    <label class="form-label small fw-bold text-muted">District City *</label>
+                                <div class="col-12 col-md-6">
+                                    <label class="form-label small fw-bold text-muted">District / City (Shahar) *</label>
                                     <select name="city" class="form-select">
-                                        <option value="Jabalpur">Jabalpur</option>
-                                        <option value="Katni">Katni</option>
-                                        <option value="Satna">Satna</option>
-                                        <option value="Maihar">Maihar</option>
-                                        <option value="Sagar">Sagar</option>
-                                        <option value="Damoh">Damoh</option>
+                                        {% if cities %}
+                                            {% for city in cities %}
+                                                <option value="{{ city.name }}">{{ city.name }}</option>
+                                            {% endfor %}
+                                        {% else %}
+                                            <option value="Jabalpur">Jabalpur</option>
+                                        {% endif %}
                                     </select>
                                 </div>
                             </div>
+
                             <div class="mb-3">
-                                <label class="form-label small fw-bold text-muted">Government ID (Aadhaar) *</label>
-                                <input type="text" name="id_card" class="form-control" placeholder="Aadhaar Card: 1234-xxxx-xxxx">
+                                <label class="form-label small fw-bold text-muted">Dukaan Ka Pura Pata (Full Address) *</label>
+                                <textarea name="address" class="form-control" rows="2" placeholder="Dukaan No., Gali / Road, Landmark, Area"></textarea>
                             </div>
+
                             <div class="mb-3">
-                                <label class="form-label small fw-bold text-muted">ITI Degree / Certifications *</label>
+                                <label class="form-label small fw-bold text-muted">Aadhaar Card Number *</label>
+                                <input type="text" name="id_card" class="form-control" placeholder="12 Digit Aadhaar Number">
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold text-muted">📷 Aadhaar Card Ki Photo *</label>
+                                <input type="file" name="id_card_photo" class="form-control" accept="image/*">
+                                <div class="form-text extra-small">Aadhaar card ki saaf photo upload karein.</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold text-muted">📸 Workshop / Dukaan Ki Photo *</label>
+                                <input type="file" name="shop_photo" class="form-control" accept="image/*">
+                                <div class="form-text extra-small">Dukaan ke samne ki photo photo upload karein.</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold text-muted">ITI Certificate / Qualification (Optional)</label>
                                 <input type="text" name="certifications" class="form-control" placeholder="E.g., ITI Motor Mechanic Certificate">
                             </div>
-                            <div class="alert alert-info small" style="font-size: 0.75rem;">
-                                ⚠️ <strong>Verification Process:</strong> Aapka profile admin verify karega. Verification ke baad list active hogi.
+
+                            <div class="alert alert-warning small mb-0 d-flex align-items-center" style="font-size: 0.8rem;">
+                                <span class="fs-5 me-2">ℹ️</span>
+                                <div><strong>Verification Note:</strong> Admin aapke documents checking karne ke baad aapki profile active karega.</div>
                             </div>
                         </div>
                         
-                        <button type="submit" class="btn btn-dark w-100 fw-bold py-2">📝 REGISTER NEW ACCOUNT</button>
+                        <button type="submit" id="btnSubmit" class="btn btn-dark btn-lg w-100 fw-bold py-3 mt-4 shadow-sm">
+                            📝 REGISTER AS CUSTOMER
+                        </button>
                     </form>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+    .role-card {
+        border: 2px solid #dee2e6 !important;
+        background-color: #fff;
+    }
+    .role-card:hover {
+        border-color: #0d6efd !important;
+        background-color: #f8f9fa;
+    }
+    .role-card.active-role {
+        border-color: #198754 !important;
+        background-color: #e8f5e9;
+    }
+</style>
 {% endblock %}
 
 {% block extra_js %}
 <script>
     function setRole(role) {
         document.getElementById('roleInput').value = role;
+        
+        const cardCust = document.getElementById('cardCustomer');
+        const cardMech = document.getElementById('cardMechanic');
+        const badgeCust = document.getElementById('badgeCust');
+        const badgeMech = document.getElementById('badgeMech');
         const mechFields = document.getElementById('mechFields');
-        const btnCust = document.getElementById('btnCustomer');
-        const btnMech = document.getElementById('btnMechanic');
+        const btnSubmit = document.getElementById('btnSubmit');
         
         if (role === 'mechanic') {
+            // Mechanic UI State
+            cardMech.classList.add('active-role');
+            cardCust.classList.remove('active-role');
+            badgeMech.classList.remove('d-none');
+            badgeCust.classList.add('d-none');
+            
             mechFields.classList.remove('d-none');
-            btnMech.className = 'btn btn-sm flex-fill fw-bold btn-dark';
-            btnCust.className = 'btn btn-sm flex-fill fw-bold btn-outline-secondary';
-            mechFields.querySelectorAll('input, select').forEach(el => el.required = true);
+            btnSubmit.innerHTML = '🔧 REGISTER AS MECHANIC';
+            btnSubmit.className = 'btn btn-primary btn-lg w-100 fw-bold py-3 mt-4 shadow-sm';
+            
+            // Set required attributes
+            mechFields.querySelectorAll('input:not([name="certifications"]), select, textarea').forEach(el => el.required = true);
         } else {
+            // Customer UI State
+            cardCust.classList.add('active-role');
+            cardMech.classList.remove('active-role');
+            badgeCust.classList.remove('d-none');
+            badgeMech.classList.add('d-none');
+            
             mechFields.classList.add('d-none');
-            btnCust.className = 'btn btn-sm flex-fill fw-bold btn-dark';
-            btnMech.className = 'btn btn-sm flex-fill fw-bold btn-outline-secondary';
-            mechFields.querySelectorAll('input, select').forEach(el => el.required = false);
+            btnSubmit.innerHTML = '🙋‍♂️ REGISTER AS CUSTOMER';
+            btnSubmit.className = 'btn btn-dark btn-lg w-100 fw-bold py-3 mt-4 shadow-sm';
+            
+            // Unset required attributes
+            mechFields.querySelectorAll('input, select, textarea').forEach(el => el.required = false);
         }
     }
 </script>

@@ -2,392 +2,160 @@
 {% block title %}Admin Panel - GarageGo{% endblock %}
 
 {% block extra_css %}
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-    .gg-admin {
-        --gg-primary: #3D2E7C;
-        --gg-primary-dark: #291F55;
-        --gg-primary-soft: #EEEAFB;
-        --gg-orange: #F5821F;
-        --gg-orange-soft: #FEEBD9;
-        --gg-navy: #1E2749;
-        --gg-green: #1FAE6B;
-        --gg-green-soft: #E3F8EE;
-        --gg-coral: #F16063;
-        --gg-coral-soft: #FDE7E7;
-        --gg-bg: #F5F6FB;
-        --gg-surface: #FFFFFF;
-        --gg-border: #E8E9F3;
-        --gg-text: #1E2749;
-        --gg-text-dim: #6B7280;
-        --gg-text-faint: #A0A4B8;
-        font-family: 'Poppins', sans-serif;
-        color: var(--gg-text);
-        max-width: 1180px;
-        margin: 0 auto;
-    }
-    .gg-admin .gg-eyebrow {
-        font-size: 0.68rem;
-        font-weight: 700;
-        letter-spacing: 0.14em;
-        text-transform: uppercase;
-        color: #C9BEFF;
-    }
-    .gg-admin .gg-heading { font-weight: 700; color: var(--gg-text); }
+    .admin-wrap { max-width: 1200px; margin: 0 auto; }
+    .admin-header { background: #3D2E7C; color: #fff; border-radius: 12px; padding: 24px; margin-bottom: 20px; }
+    .admin-header h4 { color: #fff; margin: 4px 0; }
+    .stat-box { background: rgba(255,255,255,0.1); border-radius: 8px; padding: 12px; display: flex; align-items: center; gap: 10px; }
+    .stat-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1rem; }
+    .bg-orange { background: #F5821F; }
+    .bg-purple { background: #8A7CE8; }
+    .bg-green { background: #1FAE6B; }
+    .bg-coral { background: #F16063; }
 
-    /* ===== HEADER ===== */
-    .gg-header {
-        position: relative;
-        background: linear-gradient(135deg, var(--gg-primary) 0%, var(--gg-primary-dark) 100%);
-        border-radius: 16px;
-        padding: 28px 30px 24px;
-        overflow: hidden;
-        margin-bottom: 24px;
-        color: #fff;
-    }
-    .gg-header::before {
-        content: "";
-        position: absolute;
-        top: -120px; right: -60px;
-        width: 300px; height: 300px;
-        background: radial-gradient(circle, rgba(245,130,31,0.25) 0%, rgba(245,130,31,0) 70%);
-        pointer-events: none;
-    }
-    .gg-header-top {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        flex-wrap: wrap;
-        gap: 16px;
-        position: relative;
-        z-index: 1;
-    }
-    .gg-title { font-size: 1.55rem; margin: 6px 0 2px; color: #fff; }
-    .gg-subtitle { color: rgba(255,255,255,0.7); font-size: 0.85rem; margin: 0; }
+    .admin-tabs { display: flex; flex-wrap: wrap; gap: 6px; padding: 12px; background: #f8f9fa; border-bottom: 1px solid #dee2e6; }
+    .admin-tab { font-size: 0.85rem; font-weight: 600; border: 1px solid #dee2e6; background: #fff; border-radius: 8px; padding: 8px 14px; cursor: pointer; }
+    .admin-tab.active { background: #3D2E7C; color: #fff; border-color: #3D2E7C; }
+    .admin-body { padding: 20px; }
+    .admin-panel { display: none; }
+    .admin-panel.active { display: block; }
 
-    .gg-readout {
-        background: rgba(255,255,255,0.1);
-        border: 1px solid rgba(255,255,255,0.16);
-        border-radius: 12px;
-        padding: 12px 22px;
-        text-align: right;
-        backdrop-filter: blur(4px);
-    }
-    .gg-readout-label {
-        font-size: 0.65rem;
-        font-weight: 600;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        color: rgba(255,255,255,0.65);
-    }
-    .gg-readout-value {
-        font-size: 1.5rem;
-        font-weight: 800;
-        color: var(--gg-orange);
-        line-height: 1.25;
-    }
+    .card-row { border: 1px solid #dee2e6; border-radius: 10px; padding: 14px; margin-bottom: 10px; }
+    .card-row:hover { border-color: #3D2E7C; }
+    .chip { font-size: 0.7rem; font-weight: 600; padding: 2px 10px; border-radius: 20px; display: inline-block; }
+    .chip-orange { background: #FEEBD9; color: #B8590F; }
+    .chip-green { background: #E3F8EE; color: #128350; }
+    .chip-purple { background: #EEEAFB; color: #3D2E7C; }
+    .chip-coral { background: #FDE7E7; color: #C7383B; }
 
-    .gg-stats {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 12px;
-        margin-top: 20px;
-        position: relative;
-        z-index: 1;
-    }
-    .gg-stat {
-        background: rgba(255,255,255,0.08);
-        border: 1px solid rgba(255,255,255,0.14);
-        border-radius: 12px;
-        padding: 12px 14px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-    .gg-stat-icon {
-        width: 34px; height: 34px;
-        border-radius: 9px;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 1rem;
-        flex-shrink: 0;
-    }
-    .gg-stat-icon-orange { background: var(--gg-orange); }
-    .gg-stat-icon-purple { background: #8A7CE8; }
-    .gg-stat-icon-green { background: var(--gg-green); }
-    .gg-stat-icon-coral { background: var(--gg-coral); }
-    .gg-stat-label { font-size: 0.65rem; font-weight: 500; color: rgba(255,255,255,0.65); text-transform: uppercase; letter-spacing: 0.06em; }
-    .gg-stat-value { font-size: 1.15rem; font-weight: 700; color: #fff; line-height: 1.25; }
+    .btn-gg { font-size: 0.8rem; font-weight: 600; border-radius: 6px; padding: 6px 12px; border: none; cursor: pointer; }
+    .btn-gg-success { background: #1FAE6B; color: #fff; }
+    .btn-gg-danger { background: #fff; color: #F16063; border: 1px solid #F16063; }
+    .btn-gg-primary { background: #3D2E7C; color: #fff; }
+    .btn-gg-orange { background: #F5821F; color: #fff; }
 
-    /* ===== SHELL ===== */
-    .gg-shell {
-        background: var(--gg-surface);
-        border: 1px solid var(--gg-border);
-        border-radius: 16px;
-        overflow: hidden;
-        box-shadow: 0 4px 18px rgba(30,39,73,0.05);
-    }
+    .gg-input, .gg-select { width: 100%; border: 1px solid #ced4da; border-radius: 6px; padding: 8px 10px; font-size: 0.9rem; }
+    .gg-input:focus, .gg-select:focus { outline: none; border-color: #3D2E7C; }
 
-    /* ===== TABS ===== */
-    .gg-tabs {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        padding: 14px;
-        background: var(--gg-bg);
-        border-bottom: 1px solid var(--gg-border);
-    }
-    .gg-tab {
-        font-size: 0.78rem;
-        font-weight: 600;
-        color: var(--gg-text-dim);
-        background: #fff;
-        border: 1px solid var(--gg-border);
-        border-radius: 10px;
-        padding: 9px 16px;
-        transition: all 0.15s ease;
-    }
-    .gg-tab:hover { border-color: var(--gg-primary); color: var(--gg-primary); }
-    .gg-tab.active {
-        color: #fff;
-        background: var(--gg-primary);
-        border-color: var(--gg-primary);
-        box-shadow: 0 3px 10px rgba(61,46,124,0.3);
-    }
-
-    .gg-body { padding: 26px; }
-    .gg-panel { display: none; }
-    .gg-panel.active { display: block; animation: gg-fade 0.2s ease; }
-    @keyframes gg-fade { from { opacity: 0; transform: translateY(3px);} to { opacity: 1; transform: translateY(0);} }
-
-    .gg-panel-title {
-        font-size: 0.72rem;
-        font-weight: 700;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        color: var(--gg-text-faint);
-        margin-bottom: 18px;
-    }
-
-    /* ===== ROWS ===== */
-    .gg-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        flex-wrap: wrap;
-        gap: 14px;
-        padding: 16px;
-        border: 1px solid var(--gg-border);
-        border-radius: 12px;
-        margin-bottom: 12px;
-        transition: box-shadow 0.15s ease, border-color 0.15s ease;
-    }
-    .gg-row:hover { border-color: var(--gg-primary); box-shadow: 0 4px 14px rgba(61,46,124,0.08); }
-    .gg-row-title { font-weight: 600; font-size: 0.9rem; color: var(--gg-text); }
-    .gg-row-meta { color: var(--gg-text-dim); font-size: 0.8rem; margin: 2px 0 0; }
-
-    .gg-chip {
-        font-size: 0.62rem;
-        font-weight: 700;
-        letter-spacing: 0.05em;
-        text-transform: uppercase;
-        padding: 3px 10px;
-        border-radius: 999px;
-        border: 1px solid transparent;
-        display: inline-block;
-    }
-    .gg-chip-orange { color: #B8590F; background: var(--gg-orange-soft); border-color: rgba(245,130,31,0.3); }
-    .gg-chip-green { color: #128350; background: var(--gg-green-soft); border-color: rgba(31,174,107,0.3); }
-    .gg-chip-purple { color: var(--gg-primary); background: var(--gg-primary-soft); border-color: rgba(61,46,124,0.25); }
-    .gg-chip-coral { color: #C7383B; background: var(--gg-coral-soft); border-color: rgba(241,96,99,0.3); }
-
-    .gg-price { font-weight: 700; color: var(--gg-primary); }
-
-    /* ===== BUTTONS ===== */
-    .gg-btn {
-        font-size: 0.75rem;
-        font-weight: 600;
-        border-radius: 8px;
-        padding: 8px 15px;
-        border: 1px solid transparent;
-        cursor: pointer;
-        transition: all 0.15s ease;
-    }
-    .gg-btn-approve { background: var(--gg-green); color: #fff; }
-    .gg-btn-approve:hover { background: #189359; }
-    .gg-btn-reject { background: #fff; color: var(--gg-coral); border-color: rgba(241,96,99,0.4); }
-    .gg-btn-reject:hover { background: var(--gg-coral-soft); }
-    .gg-btn-amber { background: var(--gg-orange); color: #fff; }
-    .gg-btn-amber:hover { background: #dd7414; }
-    .gg-btn-dark { background: var(--gg-primary); color: #fff; }
-    .gg-btn-dark:hover { background: var(--gg-primary-dark); }
-
-    /* ===== FORM CONTROLS ===== */
-    .gg-field-label {
-        font-size: 0.7rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        color: var(--gg-text-dim);
-        margin-bottom: 6px;
-        display: block;
-    }
-    .gg-input, .gg-select, .gg-textarea {
-        width: 100%;
-        background: #fff;
-        border: 1px solid var(--gg-border);
-        color: var(--gg-text);
-        border-radius: 99px;
-        padding: 9px 12px;
-        font-size: 0.87rem;
-        font-family: 'Poppins', sans-serif;
-    }
-    .gg-input, .gg-textarea { border-radius: 9px; }
-    .gg-input:focus, .gg-select:focus, .gg-textarea:focus {
-        outline: none;
-        border-color: var(--gg-primary);
-        box-shadow: 0 0 0 3px var(--gg-primary-soft);
-    }
-    .gg-input::placeholder { color: var(--gg-text-faint); }
-
-    select.gg-select-sm { width: auto; padding: 6px 10px; font-size: 0.78rem; }
-
-    /* ===== LEADS CARD ===== */
-    .gg-lead-block {
-        border: 1px solid var(--gg-border);
-        border-radius: 12px;
-        padding: 14px;
-        background: var(--gg-bg);
-        height: 100%;
-    }
-    .gg-lead-block.gg-lead-orange { background: var(--gg-orange-soft); border-color: rgba(245,130,31,0.3); }
-    .gg-lead-block.gg-lead-purple { background: var(--gg-primary-soft); border-color: rgba(61,46,124,0.25); }
-
-    .gg-empty { color: var(--gg-text-faint); font-size: 0.85rem; font-style: italic; }
-
-    /* Reviews Styling */
-    .gg-feedback-quote {
-        background: #f8f9fa;
-        border-left: 4px solid var(--gg-orange);
-        padding: 8px 12px;
-        border-radius: 0 8px 8px 0;
-        font-style: italic;
-        color: #333;
-    }
-
-    @media (max-width: 767px) {
-        .gg-stats { grid-template-columns: repeat(2, 1fr); }
-        .gg-readout { text-align: left; }
-    }
+    .feedback-quote { background: #f8f9fa; border-left: 3px solid #F5821F; padding: 8px 12px; border-radius: 0 6px 6px 0; font-style: italic; }
+    .lead-block { border: 1px solid #dee2e6; border-radius: 10px; padding: 12px; background: #f8f9fa; height: 100%; }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="container py-4">
-<div class="gg-admin">
+<div class="admin-wrap">
 
     <!-- Header -->
-    <div class="gg-header">
-        <div class="gg-header-top">
+    <div class="admin-header">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
             <div>
-                <div class="gg-eyebrow">Supreme Command Dashboard</div>
-                <h4 class="gg-heading gg-title">👑 Admin Control Panel</h4>
-                <p class="gg-subtitle">Platform operations · mechanic verification · spares catalog · commissions</p>
+                <div class="text-uppercase small fw-bold text-white-50">Supreme Command Dashboard</div>
+                <h4>👑 Admin Control Panel</h4>
+                <p class="text-white-50 small mb-0">Platform operations · mechanic verification · spares catalog · commissions</p>
             </div>
-            <div class="gg-readout">
-                <div class="gg-readout-label">Platform Commission (2%)</div>
-                <div class="gg-readout-value">₹{{ stats.total_commission|floatformat:0 }}</div>
+            <div class="text-end">
+                <div class="small text-white-50 text-uppercase">Platform Commission (2%)</div>
+                <div class="fs-3 fw-bold text-warning">₹{{ stats.total_commission|floatformat:0 }}</div>
             </div>
         </div>
 
-        <div class="gg-stats">
-            <div class="gg-stat">
-                <div class="gg-stat-icon gg-stat-icon-orange">🔧</div>
-                <div>
-                    <div class="gg-stat-label">Pending Mechanics</div>
-                    <div class="gg-stat-value">{{ stats.pending_mechanics }}</div>
+        <div class="row g-2 mt-3">
+            <div class="col-6 col-md-3">
+                <div class="stat-box">
+                    <div class="stat-icon bg-orange">🔧</div>
+                    <div>
+                        <div class="small text-white-50">Pending Mechanics</div>
+                        <div class="fw-bold">{{ stats.pending_mechanics }}</div>
+                    </div>
                 </div>
             </div>
-            <div class="gg-stat">
-                <div class="gg-stat-icon gg-stat-icon-purple">🚗</div>
-                <div>
-                    <div class="gg-stat-label">Pending Cars</div>
-                    <div class="gg-stat-value">{{ stats.pending_cars }}</div>
+            <div class="col-6 col-md-3">
+                <div class="stat-box">
+                    <div class="stat-icon bg-purple">🚗</div>
+                    <div>
+                        <div class="small text-white-50">Pending Cars</div>
+                        <div class="fw-bold">{{ stats.pending_cars }}</div>
+                    </div>
                 </div>
             </div>
-            <div class="gg-stat">
-                <div class="gg-stat-icon gg-stat-icon-green">📅</div>
-                <div>
-                    <div class="gg-stat-label">Active Bookings</div>
-                    <div class="gg-stat-value">{{ stats.active_bookings }}</div>
+            <div class="col-6 col-md-3">
+                <div class="stat-box">
+                    <div class="stat-icon bg-green">📅</div>
+                    <div>
+                        <div class="small text-white-50">Active Bookings</div>
+                        <div class="fw-bold">{{ stats.active_bookings }}</div>
+                    </div>
                 </div>
             </div>
-            <div class="gg-stat">
-                <div class="gg-stat-icon gg-stat-icon-coral">🛒</div>
-                <div>
-                    <div class="gg-stat-label">Total Orders</div>
-                    <div class="gg-stat-value">{{ stats.total_orders }}</div>
+            <div class="col-6 col-md-3">
+                <div class="stat-box">
+                    <div class="stat-icon bg-coral">🛒</div>
+                    <div>
+                        <div class="small text-white-50">Total Orders</div>
+                        <div class="fw-bold">{{ stats.total_orders }}</div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Tabs + Panels -->
-    <div class="gg-shell">
-        <div class="gg-tabs">
-            <button class="gg-tab active" onclick="switchTab(this, 'mechanics')">🔧 Verify Mechanics ({{ stats.pending_mechanics }})</button>
-            <button class="gg-tab" onclick="switchTab(this, 'reviews')">⭐ Customer Ratings & Reviews</button>
-            <button class="gg-tab" onclick="switchTab(this, 'cars')">🚗 Used Cars ({{ stats.pending_cars }})</button>
-            <button class="gg-tab" onclick="switchTab(this, 'bookings')">🧼 Assign / Override Bookings</button>
-            <button class="gg-tab" onclick="switchTab(this, 'orders')">🛒 Spares Orders ({{ stats.total_orders }})</button>
-            <button class="gg-tab" onclick="switchTab(this, 'parts')">➕ Add Parts</button>
-            <button class="gg-tab" onclick="switchTab(this, 'leads')">💰 Leads & Jugad Requests</button>
+    <div class="card shadow-sm">
+        <div class="admin-tabs">
+            <button class="admin-tab active" onclick="switchTab(this, 'mechanics')">🔧 Verify Mechanics ({{ stats.pending_mechanics }})</button>
+            <button class="admin-tab" onclick="switchTab(this, 'reviews')">⭐ Customer Ratings & Reviews</button>
+            <button class="admin-tab" onclick="switchTab(this, 'cars')">🚗 Used Cars ({{ stats.pending_cars }})</button>
+            <button class="admin-tab" onclick="switchTab(this, 'bookings')">🧼 Assign / Override Bookings</button>
+            <button class="admin-tab" onclick="switchTab(this, 'orders')">🛒 Spares Orders ({{ stats.total_orders }})</button>
+            <button class="admin-tab" onclick="switchTab(this, 'parts')">➕ Add Parts</button>
+            <button class="admin-tab" onclick="switchTab(this, 'leads')">💰 Leads & Jugad Requests</button>
         </div>
 
-        <div class="gg-body">
-            <!-- TAB 1: Mechanics -->
-            <div id="panel-mechanics" class="gg-panel active">
-                <h6 class="gg-panel-title">Mechanic Approval Requests</h6>
-                {% for mech in mechanics %}
-                <div class="gg-row flex-column flex-md-row">
-                    <div class="w-100">
-                        <div class="d-flex align-items-center gap-2 flex-wrap">
-                            <span class="gg-row-title">{{ mech.name }} | "{{ mech.shop_name }}"</span>
-                            <span class="gg-chip {% if mech.status == 'Active' %}gg-chip-green{% else %}gg-chip-orange{% endif %}">{{ mech.status }}</span>
-                            
-                            <!-- ⭐ REVIEWS & RATING BADGE -->
-                            <span class="badge bg-warning text-dark border">
-                                ⭐ {% if mech.avg_rating %}{{ mech.avg_rating|floatformat:1 }}{% else %}{{ mech.rating|default:"0.0" }}{% endif %}
-                                <span class="fw-normal">({{ mech.total_reviews|default:0 }} reviews)</span>
-                            </span>
-                        </div>
-                        <p class="gg-row-meta mt-1">📞 {{ mech.contact }} | 📍 {{ mech.city }}</p>
-                        <p class="gg-row-meta">🛡️ {{ mech.id_card }} | 📜 {{ mech.certifications|join:", " }}</p>
-                    </div>
+        <div class="admin-body">
 
-                    {% if mech.status == 'Pending' %}
-                    <div class="d-flex gap-2 align-self-start mt-2 mt-md-0">
-                        <form method="post" action="{% url 'approve_mechanic' mech.id %}" class="d-inline">
-                            {% csrf_token %}
-                            <input type="hidden" name="status" value="Active">
-                            <button type="submit" class="gg-btn gg-btn-approve">✅ Approve</button>
-                        </form>
-                        <form method="post" action="{% url 'approve_mechanic' mech.id %}" class="d-inline">
-                            {% csrf_token %}
-                            <input type="hidden" name="status" value="Rejected">
-                            <button type="submit" class="gg-btn gg-btn-reject">❌ Reject</button>
-                        </form>
+            <!-- TAB 1: Mechanics -->
+            <div id="panel-mechanics" class="admin-panel active">
+                <h6 class="text-uppercase text-muted small fw-bold mb-3">Mechanic Approval Requests</h6>
+                {% for mech in mechanics %}
+                <div class="card-row">
+                    <div class="d-flex flex-column flex-md-row justify-content-between gap-3">
+                        <div>
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                <strong>{{ mech.name }} | "{{ mech.shop_name }}"</strong>
+                                <span class="chip {% if mech.status == 'Active' %}chip-green{% else %}chip-orange{% endif %}">{{ mech.status }}</span>
+                                <span class="badge bg-warning text-dark">
+                                    ⭐ {% if mech.avg_rating %}{{ mech.avg_rating|floatformat:1 }}{% else %}{{ mech.rating|default:"0.0" }}{% endif %}
+                                    <span class="fw-normal">({{ mech.total_reviews|default:0 }} reviews)</span>
+                                </span>
+                            </div>
+                            <p class="small text-muted mb-1">📞 {{ mech.contact }} | 📍 {{ mech.city }}</p>
+                            <p class="small text-muted mb-0">🛡️ {{ mech.id_card }} | 📜 {{ mech.certifications|join:", " }}</p>
+                        </div>
+                        {% if mech.status == 'Pending' %}
+                        <div class="d-flex gap-2">
+                            <form method="post" action="{% url 'approve_mechanic' mech.id %}" class="d-inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="status" value="Active">
+                                <button type="submit" class="btn-gg btn-gg-success">✅ Approve</button>
+                            </form>
+                            <form method="post" action="{% url 'approve_mechanic' mech.id %}" class="d-inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="status" value="Rejected">
+                                <button type="submit" class="btn-gg btn-gg-danger">❌ Reject</button>
+                            </form>
+                        </div>
+                        {% endif %}
                     </div>
-                    {% endif %}
                 </div>
                 {% empty %}
-                <p class="gg-empty">No mechanics registered.</p>
+                <p class="text-muted fst-italic">No mechanics registered.</p>
                 {% endfor %}
             </div>
 
-            <!-- TAB 2 (NEW): CUSTOMER RATINGS & REVIEWS -->
-            <div id="panel-reviews" class="gg-panel">
-                <h6 class="gg-panel-title">⭐ Customer Ratings & Feedback Details</h6>
+            <!-- TAB 2: Reviews -->
+            <div id="panel-reviews" class="admin-panel">
+                <h6 class="text-uppercase text-muted small fw-bold mb-3">⭐ Customer Ratings & Feedback Details</h6>
                 <div class="table-responsive">
                     <table class="table table-hover align-middle bg-white rounded border">
                         <thead class="table-dark">
@@ -411,7 +179,7 @@
                                     </td>
                                     <td>
                                         {% if booking.assigned_mechanic %}
-                                            <span class="fw-bold text-dark">{{ booking.assigned_mechanic.name }}</span><br>
+                                            <span class="fw-bold">{{ booking.assigned_mechanic.name }}</span><br>
                                             <small class="text-muted">🏬 {{ booking.assigned_mechanic.shop_name }}</small>
                                         {% else %}
                                             <span class="badge bg-secondary">Unassigned</span>
@@ -428,7 +196,7 @@
                                     </td>
                                     <td style="max-width: 300px;">
                                         {% if booking.feedback %}
-                                            <div class="gg-feedback-quote small">
+                                            <div class="feedback-quote small">
                                                 "{{ booking.feedback }}"
                                             </div>
                                         {% else %}
@@ -450,16 +218,16 @@
             </div>
 
             <!-- TAB 3: Used Cars -->
-            <div id="panel-cars" class="gg-panel">
-                <h6 class="gg-panel-title">Used Car Listing Approvals</h6>
+            <div id="panel-cars" class="admin-panel">
+                <h6 class="text-uppercase text-muted small fw-bold mb-3">Used Car Listing Approvals</h6>
                 <div class="table-responsive">
                     <table class="table align-middle">
-                        <thead>
+                        <thead class="table-light">
                             <tr>
                                 <th>Car & Price</th>
-                                <th>Seller Profile (Listed By)</th>
+                                <th>Seller Profile</th>
                                 <th>Status</th>
-                                <th>Details Preview</th>
+                                <th>Details</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
@@ -467,14 +235,14 @@
                             {% for car in cars %}
                             <tr>
                                 <td>
-                                    <strong>{{ car.make }} {{ car.model }} ({{ car.year }})</strong> <br>
+                                    <strong>{{ car.make }} {{ car.model }} ({{ car.year }})</strong><br>
                                     <span class="text-success small fw-bold">₹{{ car.price }}</span>
                                 </td>
                                 <td>
                                     <div class="small">
-                                        <strong>User:</strong> {{ car.listed_by.get_full_name|default:car.listed_by.username }} <br>
-                                        <strong>Phone:</strong> {{ car.listed_by.contact }} <br>
-                                        <strong>Role:</strong> <span class="badge bg-secondary text-dark">{{ car.listed_by.role|capfirst }}</span>
+                                        <strong>User:</strong> {{ car.listed_by.get_full_name|default:car.listed_by.username }}<br>
+                                        <strong>Phone:</strong> {{ car.listed_by.contact }}<br>
+                                        <strong>Role:</strong> <span class="badge bg-secondary">{{ car.listed_by.role|capfirst }}</span>
                                     </div>
                                 </td>
                                 <td>
@@ -489,7 +257,7 @@
                                     {% endif %}
                                 </td>
                                 <td>
-                                    <button class="btn btn-sm btn-dark py-1" data-bs-toggle="modal" data-bs-target="#carDetailModal{{ car.id }}">
+                                    <button class="btn btn-sm btn-dark" data-bs-toggle="modal" data-bs-target="#carDetailModal{{ car.id }}">
                                         🔍 View Full Spec
                                     </button>
                                 </td>
@@ -499,12 +267,12 @@
                                         <form method="post" action="{% url 'approve_car' car.id %}">
                                             {% csrf_token %}
                                             <input type="hidden" name="status" value="Approved">
-                                            <button type="submit" class="btn btn-sm btn-success py-1">Approve</button>
+                                            <button type="submit" class="btn btn-sm btn-success">Approve</button>
                                         </form>
                                         <form method="post" action="{% url 'approve_car' car.id %}">
                                             {% csrf_token %}
                                             <input type="hidden" name="status" value="Rejected">
-                                            <button type="submit" class="btn btn-sm btn-danger py-1">Reject</button>
+                                            <button type="submit" class="btn btn-sm btn-danger">Reject</button>
                                         </form>
                                     </div>
                                     {% else %}
@@ -513,10 +281,10 @@
                                 </td>
                             </tr>
 
-                            <!-- 🚗 CAR VIEW MODAL -->
+                            <!-- Car Modal -->
                             <div class="modal fade" id="carDetailModal{{ car.id }}" tabindex="-1" aria-hidden="true">
                                 <div class="modal-dialog modal-lg">
-                                    <div class="modal-content text-dark">
+                                    <div class="modal-content">
                                         <div class="modal-header bg-dark text-white">
                                             <h5 class="modal-title fw-bold">📋 Car Specs & Verification Panel</h5>
                                             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
@@ -529,7 +297,7 @@
                                                         {% for photo in car.photos.all %}
                                                         <div class="col-4 mb-2">
                                                             <a href="{{ photo.image.url }}" target="_blank">
-                                                                <img src="{{ photo.image.url }}" class="img-fluid rounded border shadow-sm" style="height: 80px; width: 100%; object-fit: cover;">
+                                                                <img src="{{ photo.image.url }}" class="img-fluid rounded border" style="height: 80px; width: 100%; object-fit: cover;">
                                                             </a>
                                                         </div>
                                                         {% endfor %}
@@ -539,7 +307,7 @@
                                                     <div class="row g-1">
                                                         {% for video in car.videos.all %}
                                                         <div class="col-12 mb-2">
-                                                            <video src="{{ video.video.url }}" controls class="w-100 rounded border shadow-sm" style="height: 140px;"></video>
+                                                            <video src="{{ video.video.url }}" controls class="w-100 rounded border" style="height: 140px;"></video>
                                                         </div>
                                                         {% endfor %}
                                                     </div>
@@ -581,7 +349,7 @@
                             </div>
                             {% empty %}
                             <tr>
-                                <td colspan="5" class="text-center py-4"><p class="gg-empty mb-0">No cars registered.</p></td>
+                                <td colspan="5" class="text-center py-4 text-muted">No cars registered.</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -590,17 +358,18 @@
             </div>
 
             <!-- TAB 4: Assign Bookings -->
-            <div id="panel-bookings" class="gg-panel">
-                <h6 class="gg-panel-title">Manage Service Bookings & Manual Mechanic Assignment</h6>
+            <div id="panel-bookings" class="admin-panel">
+                <h6 class="text-uppercase text-muted small fw-bold mb-3">Manage Service Bookings & Manual Mechanic Assignment</h6>
                 {% for booking in bookings %}
-                    <div class="gg-row">
+                <div class="card-row">
+                    <div class="d-flex flex-column flex-md-row justify-content-between gap-3">
                         <div>
-                            <span class="gg-chip {% if booking.status == 'Broadcasting' %}gg-chip-orange{% else %}gg-chip-purple{% endif %}">
+                            <span class="chip {% if booking.status == 'Broadcasting' %}chip-orange{% else %}chip-purple{% endif %}">
                                 {{ booking.status }}
                             </span>
-                            <h6 class="gg-row-title mt-1 mb-0">{{ booking.service_category }} - {{ booking.service_subtype }}</h6>
-                            <p class="gg-row-meta">🚗 {{ booking.car_details }} | 📍 {{ booking.city }} | 👤 {{ booking.customer_name }} ({{ booking.customer_contact }})</p>
-                            <p class="gg-row-meta text-primary fw-bold mb-0">
+                            <h6 class="mt-1 mb-0"><strong>{{ booking.service_category }} - {{ booking.service_subtype }}</strong></h6>
+                            <p class="small text-muted mb-1">🚗 {{ booking.car_details }} | 📍 {{ booking.city }} | 👤 {{ booking.customer_name }} ({{ booking.customer_contact }})</p>
+                            <p class="small text-primary fw-bold mb-0">
                                 {% if booking.assigned_mechanic %}
                                     🔧 Assigned to: {{ booking.assigned_mechanic.name }} ({{ booking.assigned_mechanic.shop_name }})
                                 {% else %}
@@ -608,9 +377,9 @@
                                 {% endif %}
                             </p>
                         </div>
-                        <div style="min-width: 320px;">
-                            <label class="gg-field-label">Assign / Override Mechanic in "{{ booking.city }}"</label>
-                            <form method="post" action="{% url 'assign_booking' booking.id %}" class="d-flex gap-2">
+                        <div style="min-width: 300px;">
+                            <label class="small fw-bold text-muted text-uppercase">Assign / Override Mechanic in "{{ booking.city }}"</label>
+                            <form method="post" action="{% url 'assign_booking' booking.id %}" class="d-flex gap-2 mt-1">
                                 {% csrf_token %}
                                 <select name="mechanic_id" class="gg-select" required>
                                     <option value="">-- Choose Mechanic --</option>
@@ -622,28 +391,29 @@
                                         {% endif %}
                                     {% endfor %}
                                 </select>
-                                <button type="submit" class="gg-btn gg-btn-dark" style="white-space:nowrap;">Assign 👉</button>
+                                <button type="submit" class="btn-gg btn-gg-primary" style="white-space:nowrap;">Assign 👉</button>
                             </form>
                         </div>
                     </div>
+                </div>
                 {% empty %}
-                <p class="gg-empty">No bookings found.</p>
+                <p class="text-muted fst-italic">No bookings found.</p>
                 {% endfor %}
             </div>
 
             <!-- TAB 5: Orders -->
-            <div id="panel-orders" class="gg-panel">
-                <h6 class="gg-panel-title">Spares COD Deliveries</h6>
+            <div id="panel-orders" class="admin-panel">
+                <h6 class="text-uppercase text-muted small fw-bold mb-3">Spares COD Deliveries</h6>
                 {% for order in orders %}
-                <div class="gg-row">
+                <div class="card-row d-flex flex-column flex-md-row justify-content-between gap-3">
                     <div>
-                        <h6 class="gg-row-title mb-0">Order #{{ order.id }} | {{ order.part_name }}</h6>
-                        <p class="gg-row-meta">Buyer: {{ order.buyer_name }} (📞 {{ order.buyer_contact }})</p>
-                        <p class="gg-row-meta">📍 {{ order.buyer_address }} | Qty: {{ order.quantity }} | <span class="gg-price">₹{{ order.total_price|floatformat:0 }}</span></p>
+                        <h6 class="mb-0"><strong>Order #{{ order.id }} | {{ order.part_name }}</strong></h6>
+                        <p class="small text-muted mb-1">Buyer: {{ order.buyer_name }} (📞 {{ order.buyer_contact }})</p>
+                        <p class="small text-muted mb-0">📍 {{ order.buyer_address }} | Qty: {{ order.quantity }} | <strong class="text-primary">₹{{ order.total_price|floatformat:0 }}</strong></p>
                     </div>
                     <form method="post" action="{% url 'update_order_status' order.id %}" class="d-inline">
                         {% csrf_token %}
-                        <select name="status" class="gg-select gg-select-sm" onchange="this.form.submit()">
+                        <select name="status" class="gg-select" style="width:auto;" onchange="this.form.submit()">
                             <option value="Processing" {% if order.status == 'Processing' %}selected{% endif %}>Processing</option>
                             <option value="Shipped" {% if order.status == 'Shipped' %}selected{% endif %}>Shipped 🚚</option>
                             <option value="Delivered" {% if order.status == 'Delivered' %}selected{% endif %}>Delivered ✅</option>
@@ -651,94 +421,90 @@
                     </form>
                 </div>
                 {% empty %}
-                <p class="gg-empty">No orders yet.</p>
+                <p class="text-muted fst-italic">No orders yet.</p>
                 {% endfor %}
             </div>
 
             <!-- TAB 6: Add Parts -->
-            <div id="panel-parts" class="gg-panel">
-                <h6 class="gg-panel-title">Add New Spare Part</h6>
-                
+            <div id="panel-parts" class="admin-panel">
+                <h6 class="text-uppercase text-muted small fw-bold mb-3">Add New Spare Part</h6>
                 <form method="post" action="{% url 'add_part' %}" enctype="multipart/form-data" class="col-lg-6" id="addPartAdminForm">
                     {% csrf_token %}
                     <div class="mb-3">
-                        <label class="gg-field-label">Part Name *</label>
+                        <label class="small fw-bold text-muted text-uppercase">Part Name *</label>
                         <input type="text" name="name" class="gg-input" placeholder="E.g., Maruti Swift Front Bumper" required>
                     </div>
                     <div class="row g-2 mb-3">
                         <div class="col-6">
-                            <label class="gg-field-label">Type *</label>
+                            <label class="small fw-bold text-muted text-uppercase">Type *</label>
                             <select name="type" class="gg-select">
                                 <option value="New">New</option>
                                 <option value="Used">Used</option>
                             </select>
                         </div>
                         <div class="col-6">
-                            <label class="gg-field-label">Compatibility</label>
+                            <label class="small fw-bold text-muted text-uppercase">Compatibility</label>
                             <input type="text" name="compatibility" class="gg-input" placeholder="Maruti Swift (2018-2022)">
                         </div>
                     </div>
                     <div class="row g-2 mb-3">
                         <div class="col-6">
-                            <label class="gg-field-label">Price (₹) *</label>
+                            <label class="small fw-bold text-muted text-uppercase">Price (₹) *</label>
                             <input type="number" name="price" class="gg-input" required>
                         </div>
                         <div class="col-6">
-                            <label class="gg-field-label">Stock Qty *</label>
+                            <label class="small fw-bold text-muted text-uppercase">Stock Qty *</label>
                             <input type="number" name="quantity" class="gg-input" required>
                         </div>
                     </div>
-
                     <div class="mb-3">
-                        <label class="gg-field-label">Upload Spare Photos * (Max 4)</label>
+                        <label class="small fw-bold text-muted text-uppercase">Upload Spare Photos * (Max 4)</label>
                         <input type="file" name="part_photos" id="partPhotosField" class="gg-input" accept="image/*" multiple required>
-                        <div class="form-text text-muted" style="font-size: 0.72rem; color: #888;">Select maximum 4 clear images of the part from your device.</div>
+                        <div class="form-text text-muted small">Select maximum 4 clear images of the part from your device.</div>
                     </div>
-
                     <div class="mb-3">
-                        <label class="gg-field-label">Description</label>
-                        <textarea name="description" class="gg-textarea" rows="2" placeholder="Describe physical condition, brand details, or warranty."></textarea>
+                        <label class="small fw-bold text-muted text-uppercase">Description</label>
+                        <textarea name="description" class="gg-input" rows="2" placeholder="Describe physical condition, brand details, or warranty."></textarea>
                     </div>
-                    
-                    <button type="submit" class="gg-btn gg-btn-dark">⚙️ Save &amp; Publish</button>
+                    <button type="submit" class="btn-gg btn-gg-primary">⚙️ Save & Publish</button>
                 </form>
             </div>
 
             <!-- TAB 7: Leads & Jugad Requests -->
-            <div id="panel-leads" class="gg-panel">
-                <h6 class="gg-panel-title">Car Buyer Leads & Commission</h6>
+            <div id="panel-leads" class="admin-panel">
+                <h6 class="text-uppercase text-muted small fw-bold mb-3">Car Buyer Leads & Commission</h6>
                 {% for inq in inquiries %}
-                <div class="gg-row" style="display:block;">
+                <div class="card-row">
                     <div class="row g-3">
                         <div class="col-lg-4">
-                            <div class="gg-lead-block">
-                                <span class="gg-chip gg-chip-purple">Car Spec</span>
-                                <h6 class="gg-row-title mt-2">{{ inq.car_title }}</h6>
-                                <p class="gg-row-meta mb-0">Price: <span class="gg-price">₹{{ inq.car.price|floatformat:0 }}</span></p>
+                            <div class="lead-block">
+                                <span class="chip chip-purple">Car Spec</span>
+                                <h6 class="mt-2"><strong>{{ inq.car_title }}</strong></h6>
+                                <p class="small text-muted mb-0">Price: <strong class="text-primary">₹{{ inq.car.price|floatformat:0 }}</strong></p>
                             </div>
                         </div>
                         <div class="col-lg-4">
-                            <div class="gg-lead-block gg-lead-purple">
-                                <span class="gg-chip gg-chip-purple">Buyer</span>
-                                <p class="gg-row-title mt-2 mb-1">{{ inq.buyer_name }}</p>
-                                <p class="gg-row-meta mb-1">📞 {{ inq.buyer_contact }}</p>
-                                <p class="gg-row-meta fst-italic mb-0">"{{ inq.buyer_message|truncatewords:10 }}"</p>
+                            <div class="lead-block" style="background:#EEEAFB; border-color:rgba(61,46,124,0.25);">
+                                <span class="chip chip-purple">Buyer</span>
+                                <p class="mt-2 mb-1"><strong>{{ inq.buyer_name }}</strong></p>
+                                <p class="small text-muted mb-1">📞 {{ inq.buyer_contact }}</p>
+                                <p class="small text-muted fst-italic mb-0">"{{ inq.buyer_message|truncatewords:10 }}"</p>
                             </div>
                         </div>
                         <div class="col-lg-4">
-                            <div class="gg-lead-block gg-lead-orange">
-                                <span class="gg-chip gg-chip-orange">Commission</span>
-                                <p class="gg-row-title mt-2 mb-1">2% Platform Fee:</p>
-                                <p class="gg-price" style="font-size:1.2rem;">₹{{ inq.car.price|floatformat:0 }}</p>
+                            <div class="lead-block" style="background:#FEEBD9; border-color:rgba(245,130,31,0.3);">
+                                <span class="chip chip-orange">Commission</span>
+                                <p class="mt-2 mb-1"><strong>2% Platform Fee:</strong></p>
+                                <p class="text-primary fw-bold" style="font-size:1.2rem;">₹{{ inq.car.price|floatformat:0 }}</p>
                             </div>
                         </div>
                     </div>
                 </div>
                 {% empty %}
-                <p class="gg-empty mb-4">No car buyer inquiries yet.</p>
+                <p class="text-muted fst-italic mb-4">No car buyer inquiries yet.</p>
                 {% endfor %}
 
-                <h6 class="gg-panel-title mt-5">🛠️ Spare Part Requests (Jugad Leads)</h6>
+                <h6 class="text-uppercase text-muted small fw-bold mt-5 mb-3">🛠️ Spare Part Requests (Jugad Leads)</h6>
                 <div class="table-responsive">
                     <table class="table table-hover align-middle bg-white shadow-sm rounded-3">
                         <thead class="table-dark">
@@ -759,7 +525,7 @@
                                 <td>{{ req.part_name }} <span class="badge bg-secondary">{{ req.part_type }}</span></td>
                                 <td>
                                     {% if req.sample_photo %}
-                                    <a href="{{ req.sample_photo.url }}" target="_blank" class="btn btn-sm btn-outline-info py-0">View Photo</a>
+                                    <a href="{{ req.sample_photo.url }}" target="_blank" class="btn btn-sm btn-outline-info">View Photo</a>
                                     {% else %}
                                     <span class="text-muted small">No photo</span>
                                     {% endif %}
@@ -787,6 +553,7 @@
                     </table>
                 </div>
             </div>
+
         </div>
     </div>
 
@@ -797,8 +564,8 @@
 {% block extra_js %}
 <script>
     function switchTab(btn, tabId) {
-        document.querySelectorAll('.gg-panel').forEach(p => p.classList.remove('active'));
-        document.querySelectorAll('.gg-tab').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.admin-panel').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.admin-tab').forEach(b => b.classList.remove('active'));
         document.getElementById('panel-' + tabId).classList.add('active');
         btn.classList.add('active');
     }

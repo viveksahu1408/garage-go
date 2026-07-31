@@ -114,11 +114,16 @@ def register_view(request):
         if role == 'mechanic':
             shop_name = request.POST.get('shop_name')
             city = request.POST.get('city', 'Jabalpur')
+            address = request.POST.get('address', '') # ➕ Address field
             id_card = request.POST.get('id_card')
             certifications = request.POST.get('certifications', '')
             
-            if not shop_name or not city or not id_card:
-                messages.error(request, 'Mechanic ke liye Shop, City, ID Card jaruri hain!')
+            # ➕ Photos from request.FILES
+            id_card_photo = request.FILES.get('id_card_photo')
+            shop_photo = request.FILES.get('shop_photo')
+            
+            if not shop_name or not city or not address or not id_card or not id_card_photo:
+                messages.error(request, 'Mechanic ke liye Shop, City, Address, ID Card & ID Photo jaruri hain!')
                 user.delete()
                 return render(request, 'main/register.html')
             
@@ -128,14 +133,17 @@ def register_view(request):
                 contact=contact,
                 shop_name=shop_name,
                 city=city,
+                address=address, # Save address
                 id_card=id_card,
+                id_card_photo=id_card_photo, # Save ID photo
+                shop_photo=shop_photo, # Save Shop photo
                 certifications=[certifications] if certifications else ['ITI Certificate'],
                 status='Pending'
             )
             user.mechanic_status = 'Pending'
             user.save()
         
-        messages.success(request, 'Registration successful! Ab login karein.')
+        messages.success(request, 'Registration successful! Profile Admin verification ke liye chali gayi hai. Ab login karein.')
         return redirect('login')
     
     return render(request, 'main/register.html')

@@ -48,9 +48,14 @@ class Mechanic(models.Model):
     name = models.CharField(max_length=100)
     contact = models.CharField(max_length=15)
     shop_name = models.CharField(max_length=200)
-    shop_photo = models.URLField(max_length=500, blank=True)
+    
+    # ➕ ADD/UPDATE THESE FIELDS FOR IMAGES & ADDRESS
+    address = models.TextField(blank=True, null=True, help_text="Full Shop Address")
+    id_card = models.CharField(max_length=200)  # Aadhaar Number
+    id_card_photo = models.ImageField(upload_to='mechanics/ids/', blank=True, null=True)
+    shop_photo = models.ImageField(upload_to='mechanics/shops/', blank=True, null=True) # Changed from URLField to ImageField
+    
     certifications = models.JSONField(default=list, blank=True)
-    id_card = models.CharField(max_length=200)
     city = models.CharField(max_length=50)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -61,6 +66,7 @@ class Mechanic(models.Model):
     class Meta:
         ordering = ['-created_at']
 
+        
 
 class Booking(models.Model):
     """Service booking with Ola/Uber Style Dispatch & Feedback"""
