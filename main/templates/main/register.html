@@ -12,7 +12,7 @@
                 </div>
                 <div class="card-body p-4">
                     
-                    <!-- 🌟 VISUAL ROLE SELECTOR (EASY TO UNDERSTAND) -->
+                    <!-- 🌟 VISUAL ROLE SELECTOR -->
                     <label class="form-label small fw-bold text-uppercase text-muted mb-2">Aapka Role Kya Hai? *</label>
                     <div class="row g-3 mb-4">
                         <div class="col-6">
@@ -93,16 +93,113 @@
                                 <input type="text" name="id_card" class="form-control" placeholder="12 Digit Aadhaar Number">
                             </div>
 
+                            <!-- DYNAMIC SERVICES OFFERED -->
+                            <hr>
                             <div class="mb-3">
-                                <label class="form-label small fw-bold text-muted">📷 Aadhaar Card Ki Photo *</label>
-                                <input type="file" name="id_card_photo" class="form-control" accept="image/*">
-                                <div class="form-text extra-small">Aadhaar card ki saaf photo upload karein.</div>
+                                <label class="form-label small fw-bold text-muted d-block">🛠️ Services Offered (Select Services) *</label>
+                                <div class="bg-white p-3 border rounded-3">
+                                    {% for category in categories %}
+                                        <div class="mt-2 mb-1">
+                                            <strong class="text-primary small">{{ category.name }}</strong>
+                                        </div>
+                                        <div class="row g-2">
+                                            {% for package in category.packages.all %}
+                                            <div class="col-12 col-md-6">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" name="services" value="{{ category.name }} - {{ package.name }}" id="pkg_{{ package.id }}">
+                                                    <label class="form-check-label extra-small text-dark" for="pkg_{{ package.id }}">
+                                                        {{ package.name }} {% if package.price %}(₹{{ package.price }}){% endif %}
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            {% empty %}
+                                            <div class="col-12 text-muted extra-small">No packages available.</div>
+                                            {% endfor %}
+                                        </div>
+                                    {% empty %}
+                                        <div class="text-muted extra-small">No categories added by admin yet.</div>
+                                    {% endfor %}
+                                </div>
                             </div>
 
-                            <div class="mb-3">
+                            <hr>
+
+                            <!-- 1. Aadhaar Card Photo -->
+                            <div class="mb-4">
+                                <label class="form-label small fw-bold text-muted">📷 Aadhaar Card Ki Photo *</label>
+                                <div class="bg-white p-3 border rounded-3">
+                                    <input type="file" name="id_card_photo" id="idCardFileInput" class="form-control mb-2" accept="image/*" onchange="handleFileSelect(this, 'idCardPreview', 'idCardPreviewBox')">
+                                    
+                                    <div class="text-center my-2">
+                                        <span class="badge bg-secondary">YA</span>
+                                    </div>
+
+                                    <div class="text-center">
+                                        <button type="button" class="btn btn-sm btn-outline-primary w-100 mb-2" onclick="startCamera('idCard', 'environment')">🎥 Live Camera Open Karein</button>
+                                        
+                                        <div id="idCardCamBox" style="display:none;">
+                                            <video id="idCardVideo" autoplay playsinline width="100%" style="max-height: 220px; object-fit: cover;" class="border rounded bg-dark mb-2"></video>
+                                            <button type="button" class="btn btn-sm btn-success mb-2" onclick="capturePhoto('idCard', 'idCardFileInput', 'idCardPreview', 'idCardPreviewBox')">📸 Click Photo</button>
+                                        </div>
+
+                                        <div id="idCardPreviewBox" style="display:none;" class="mt-2">
+                                            <p class="text-muted extra-small mb-1">Selected / Captured Photo:</p>
+                                            <img id="idCardPreview" src="" class="img-thumbnail" style="max-height: 150px;">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 2. Workshop Photo -->
+                            <div class="mb-4">
                                 <label class="form-label small fw-bold text-muted">📸 Workshop / Dukaan Ki Photo *</label>
-                                <input type="file" name="shop_photo" class="form-control" accept="image/*">
-                                <div class="form-text extra-small">Dukaan ke samne ki photo photo upload karein.</div>
+                                <div class="bg-white p-3 border rounded-3">
+                                    <input type="file" name="shop_photo" id="shopFileInput" class="form-control mb-2" accept="image/*" onchange="handleFileSelect(this, 'shopPreview', 'shopPreviewBox')">
+                                    
+                                    <div class="text-center my-2">
+                                        <span class="badge bg-secondary">YA</span>
+                                    </div>
+
+                                    <div class="text-center">
+                                        <button type="button" class="btn btn-sm btn-outline-primary w-100 mb-2" onclick="startCamera('shop', 'environment')">🎥 Live Camera Open Karein</button>
+                                        
+                                        <div id="shopCamBox" style="display:none;">
+                                            <video id="shopVideo" autoplay playsinline width="100%" style="max-height: 220px; object-fit: cover;" class="border rounded bg-dark mb-2"></video>
+                                            <button type="button" class="btn btn-sm btn-success mb-2" onclick="capturePhoto('shop', 'shopFileInput', 'shopPreview', 'shopPreviewBox')">📸 Click Photo</button>
+                                        </div>
+
+                                        <div id="shopPreviewBox" style="display:none;" class="mt-2">
+                                            <p class="text-muted extra-small mb-1">Selected / Captured Photo:</p>
+                                            <img id="shopPreview" src="" class="img-thumbnail" style="max-height: 150px;">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 3. Live Selfie Photo -->
+                            <div class="mb-4">
+                                <label class="form-label small fw-bold text-muted">🤳 Live Selfie / Profile Photo *</label>
+                                <div class="bg-white p-3 border rounded-3">
+                                    <input type="file" name="selfie_photo" id="selfieFileInput" class="form-control mb-2" accept="image/*" onchange="handleFileSelect(this, 'selfiePreview', 'selfiePreviewBox')">
+                                    
+                                    <div class="text-center my-2">
+                                        <span class="badge bg-secondary">YA</span>
+                                    </div>
+
+                                    <div class="text-center">
+                                        <button type="button" class="btn btn-sm btn-outline-primary w-100 mb-2" onclick="startCamera('selfie', 'user')">🎥 Live Camera Open Karein</button>
+                                        
+                                        <div id="selfieCamBox" style="display:none;">
+                                            <video id="selfieVideo" autoplay playsinline width="100%" style="max-height: 220px; object-fit: cover;" class="border rounded bg-dark mb-2"></video>
+                                            <button type="button" class="btn btn-sm btn-success mb-2" onclick="capturePhoto('selfie', 'selfieFileInput', 'selfiePreview', 'selfiePreviewBox')">📸 Click Photo</button>
+                                        </div>
+
+                                        <div id="selfiePreviewBox" style="display:none;" class="mt-2">
+                                            <p class="text-muted extra-small mb-1">Selected / Captured Photo:</p>
+                                            <img id="selfiePreview" src="" class="img-thumbnail rounded-circle" style="width: 130px; height: 130px; object-fit: cover;">
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
                             <div class="mb-3">
@@ -115,6 +212,9 @@
                                 <div><strong>Verification Note:</strong> Admin aapke documents checking karne ke baad aapki profile active karega.</div>
                             </div>
                         </div>
+
+                        <!-- Hidden canvas for photo rendering -->
+                        <canvas id="hiddenCanvas" style="display:none;"></canvas>
                         
                         <button type="submit" id="btnSubmit" class="btn btn-dark btn-lg w-100 fw-bold py-3 mt-4 shadow-sm">
                             📝 REGISTER AS CUSTOMER
@@ -139,11 +239,16 @@
         border-color: #198754 !important;
         background-color: #e8f5e9;
     }
+    .extra-small {
+        font-size: 0.75rem;
+    }
 </style>
 {% endblock %}
 
 {% block extra_js %}
 <script>
+    let activeStreams = {};
+
     function setRole(role) {
         document.getElementById('roleInput').value = role;
         
@@ -155,7 +260,6 @@
         const btnSubmit = document.getElementById('btnSubmit');
         
         if (role === 'mechanic') {
-            // Mechanic UI State
             cardMech.classList.add('active-role');
             cardCust.classList.remove('active-role');
             badgeMech.classList.remove('d-none');
@@ -165,10 +269,8 @@
             btnSubmit.innerHTML = '🔧 REGISTER AS MECHANIC';
             btnSubmit.className = 'btn btn-primary btn-lg w-100 fw-bold py-3 mt-4 shadow-sm';
             
-            // Set required attributes
-            mechFields.querySelectorAll('input:not([name="certifications"]), select, textarea').forEach(el => el.required = true);
+            mechFields.querySelectorAll('input:not([name="certifications"]):not([name="services"]), select, textarea').forEach(el => el.required = true);
         } else {
-            // Customer UI State
             cardCust.classList.add('active-role');
             cardMech.classList.remove('active-role');
             badgeCust.classList.remove('d-none');
@@ -178,9 +280,72 @@
             btnSubmit.innerHTML = '🙋‍♂️ REGISTER AS CUSTOMER';
             btnSubmit.className = 'btn btn-dark btn-lg w-100 fw-bold py-3 mt-4 shadow-sm';
             
-            // Unset required attributes
             mechFields.querySelectorAll('input, select, textarea').forEach(el => el.required = false);
         }
+    }
+
+    // Gallery File Choose Preview
+    function handleFileSelect(input, previewImgId, previewBoxId) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                document.getElementById(previewImgId).src = e.target.result;
+                document.getElementById(previewBoxId).style.display = 'block';
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    // Live Camera Stream Open
+    async function startCamera(type, cameraMode) {
+        const camBox = document.getElementById(type + 'CamBox');
+        const video = document.getElementById(type + 'Video');
+
+        // Stop existing stream if any
+        if (activeStreams[type]) {
+            activeStreams[type].getTracks().forEach(track => track.stop());
+        }
+
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: cameraMode },
+                audio: false
+            });
+            activeStreams[type] = stream;
+            video.srcObject = stream;
+            camBox.style.display = 'block';
+        } catch (err) {
+            alert("Camera Permission Denied ya Camera connect nahi hai!");
+        }
+    }
+
+    // Capture Photo From Camera
+    function capturePhoto(type, fileInputId, previewImgId, previewBoxId) {
+        const video = document.getElementById(type + 'Video');
+        const canvas = document.getElementById('hiddenCanvas');
+        
+        canvas.width = video.videoWidth || 640;
+        canvas.height = video.videoHeight || 480;
+        
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        canvas.toBlob(function (blob) {
+            const file = new File([blob], type + "_captured.jpg", { type: "image/jpeg" });
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            document.getElementById(fileInputId).files = dataTransfer.files;
+
+            // Display Preview
+            document.getElementById(previewImgId).src = URL.createObjectURL(file);
+            document.getElementById(previewBoxId).style.display = 'block';
+
+            // Close Camera Stream
+            if (activeStreams[type]) {
+                activeStreams[type].getTracks().forEach(track => track.stop());
+            }
+            document.getElementById(type + 'CamBox').style.display = 'none';
+        }, 'image/jpeg');
     }
 </script>
 {% endblock %}

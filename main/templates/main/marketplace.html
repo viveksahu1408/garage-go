@@ -375,6 +375,9 @@
 </div>
 
 <!-- JS Form Logic Scripts -->
+<!-- Browser Image Compression CDN Script -->
+<script src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.2/dist/browser-image-compression.mjs"></script>
+
 <script>
 function toggleInsuranceFields() {
     var status = document.getElementById('insuranceStatusSelect').value;
@@ -398,20 +401,65 @@ function toggleAccidentalFields() {
     }
 }
 
-document.getElementById('sellCarForm').addEventListener('submit', function(e) {
+// AUTOMATIC IMAGE COMPRESSION BEFORE SUBMIT
+document.getElementById('sellCarForm').addEventListener('submit', async function(e) {
+    e.preventDefault(); // Stop default submit for a moment to compress
+    
     var photoInput = document.getElementById('photoFileField');
     var videoInput = document.getElementById('videoFileField');
+    var submitBtn = this.querySelector('button[type="submit"]');
     
     if (photoInput.files.length > 10) {
         alert("Bhai, Maximum 10 photos hi select kar sakte ho!");
-        e.preventDefault();
         return false;
     }
     
     if (videoInput.files.length > 4) {
         alert("Bhai, Maximum 4 videos hi select kar sakte ho!");
-        e.preventDefault();
         return false;
+    }
+
+    // Submit button state change karo taaki double click na ho
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = "⏳ Compressing Images & Uploading...";
+
+    const options = {
+        maxSizeMB: 0.5,           // Maximum File Size (0.5MB = 500KB)
+        maxWidthOrHeight: 1280,   // Max width/height 1280px
+        useWebWorker: true
+    };
+
+    try {
+        const container = new DataTransfer();
+        const files = photoInput.files;
+
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            // Clear check ki file image hai ya nahi
+            if (file.type.startsWith('image/')) {
+                console.log(`Original Size: ${file.name} - ${(file.size / 1024 / 1024).toFixed(2)} MB`);
+                // Compress image
+                const compressedFile = await imageCompression(file, options);
+                console.log(`Compressed Size: ${(compressedFile.size / 1024 / 1024).toFixed(2)} MB`);
+                
+                // Nayi compressed file ko container me add karo
+                const newFile = new File([compressedFile], file.name, { type: compressedFile.type });
+                container.items.add(newFile);
+            } else {
+                container.items.add(file);
+            }
+        }
+
+        // Compressed files ko input field par wapas attach kar do
+        photoInput.files = container.files;
+
+        // Ab form submit kar do
+        this.submit();
+
+    } catch (error) {
+        console.error("Compression Error:", error);
+        alert("Image process karne me issue aaya, normal submit kar rahe hain.");
+        this.submit(); // Error aaye toh bhi break na ho
     }
 });
 

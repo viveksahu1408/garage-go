@@ -6,13 +6,13 @@ from django.db.models import Q, Sum
 from django.utils import timezone
 from decimal import Decimal
 from django.db.models import Avg, Count, Prefetch
-from .models import Mechanic
 
 from .models import (
     User, Mechanic, Booking, MarketplaceCar, 
     AutoPart, PartOrder, Inquiry, ServiceCategory, City,
     CarPhoto, CarVideo, AutoPartPhoto, PartRequest
 )
+import json
 
 
 # ============================================================
@@ -114,18 +114,24 @@ def register_view(request):
         if role == 'mechanic':
             shop_name = request.POST.get('shop_name')
             city = request.POST.get('city', 'Jabalpur')
-            address = request.POST.get('address', '') # ➕ Address field
+            address = request.POST.get('address', '') 
             id_card = request.POST.get('id_card')
             certifications = request.POST.get('certifications', '')
             
-            # ➕ Photos from request.FILES
+            # ➕ Direct File Uploads from request.FILES
             id_card_photo = request.FILES.get('id_card_photo')
             shop_photo = request.FILES.get('shop_photo')
+            selfie_photo = request.FILES.get('selfie_photo') # 🎯 Fixed: Directly receiving selfie photo file
+
+            # ➕ Dynamic Selected Services Checkbox Array
+            selected_services = request.POST.getlist('services')
             
             if not shop_name or not city or not address or not id_card or not id_card_photo:
                 messages.error(request, 'Mechanic ke liye Shop, City, Address, ID Card & ID Photo jaruri hain!')
                 user.delete()
-                return render(request, 'main/register.html')
+                # Refetch categories for error rerender
+                all_categories = ServiceCategory.objects.prefetch_related('packages').all()
+                return render(request, 'main/register.html', {'categories': all_categories})
             
             Mechanic.objects.create(
                 user=user,
@@ -133,10 +139,12 @@ def register_view(request):
                 contact=contact,
                 shop_name=shop_name,
                 city=city,
-                address=address, # Save address
+                address=address,
                 id_card=id_card,
-                id_card_photo=id_card_photo, # Save ID photo
-                shop_photo=shop_photo, # Save Shop photo
+                id_card_photo=id_card_photo,
+                shop_photo=shop_photo,
+                selfie_photo=selfie_photo, # 🆕 Direct File Saved
+                services_offered=selected_services,
                 certifications=[certifications] if certifications else ['ITI Certificate'],
                 status='Pending'
             )
@@ -146,8 +154,10 @@ def register_view(request):
         messages.success(request, 'Registration successful! Profile Admin verification ke liye chali gayi hai. Ab login karein.')
         return redirect('login')
     
-    return render(request, 'main/register.html')
-
+    # ➕ Fetch dynamic service categories & packages created by Owner/Admin
+    all_categories = ServiceCategory.objects.prefetch_related('packages').all()
+    
+    return render(request, 'main/register.html', {'categories': all_categories})
 
 def logout_view(request):
     logout(request)
@@ -388,27 +398,90 @@ def mechanic_dashboard(request):
     }
     return render(request, 'main/mechanic_dashboard.html', context)
 
-
 @login_required
 @role_required(['admin'])
 def admin_dashboard(request):
-    total_commission = MarketplaceCar.objects.filter(status='Sold').aggregate(
-        total=Sum('commission_earned')
-    )['total'] or 0
-    
+    total_commission = (
+        MarketplaceCar.objects.filter(status='Sold').aggregate(
+            total=Sum('commission_earned')
+        )['total']
+        or 0
+    )
+
     pending_mechanics = Mechanic.objects.filter(status='Pending').count()
     pending_cars = MarketplaceCar.objects.filter(status='Pending').count()
-    active_bookings = Booking.objects.exclude(status__in=['Completed', 'Rejected', 'Cancelled']).count()
+    active_bookings = Booking.objects.exclude(
+        status__in=['Completed', 'Rejected', 'Cancelled']
+    ).count()
     total_orders = PartOrder.objects.count()
-    
-    cars_with_details = MarketplaceCar.objects.select_related('listed_by').prefetch_related('photos', 'videos').all()
 
-    # FIX: reviews ki jagah bookings field use kiya gaya hai
-    mechanics = Mechanic.objects.annotate(
-        avg_rating=Avg('bookings__rating'),
-        total_reviews=Count('bookings__rating')
-    ).prefetch_related('bookings')
-    
+    cars_with_details = (
+        MarketplaceCar.objects.select_related('listed_by')
+        .prefetch_related('photos', 'videos')
+        .all()
+        .order_by('-id')
+    )
+
+    mechanics = (
+        Mechanic.objects.annotate(
+            avg_rating=Avg('bookings__rating'),
+            total_reviews=Count('bookings__rating'),
+        )
+        .prefetch_related('bookings')
+        .order_by('-id')
+    )
+
+    # 🎯 FIX 1 & 2: Services Offered aur Certifications Processing (JSON / List handling)
+    for mech in mechanics:
+        # 1. Services Parsing (`services_offered` check)
+        raw_services = (
+            getattr(mech, 'services_offered', None) 
+            or getattr(mech, 'services', None) 
+            or getattr(mech, 'service_list', None)
+        )
+        mech.parsed_services = []
+
+        if raw_services:
+            if isinstance(raw_services, list):
+                mech.parsed_services = raw_services
+            elif isinstance(raw_services, str):
+                try:
+                    # JSON parse try karein (e.g. '["service1", "service2"]')
+                    parsed = json.loads(raw_services)
+                    if isinstance(parsed, list):
+                        mech.parsed_services = parsed
+                    else:
+                        mech.parsed_services = [str(parsed)]
+                except Exception:
+                    # Fallback agar plain string comma separated ho
+                    mech.parsed_services = [
+                        s.strip().strip('"\'[]') 
+                        for s in raw_services.split(',') 
+                        if s.strip()
+                    ]
+
+        # Template compatibility ke liye service_list dynamic attribute bhi set kar rahe hain
+        mech.service_list = mech.parsed_services
+
+        # 2. Certifications Parsing (['2 years '] ko clean formatting mein badalna)
+        raw_cert = getattr(mech, 'certifications', '')
+        if raw_cert:
+            if isinstance(raw_cert, str):
+                try:
+                    parsed_cert = json.loads(raw_cert)
+                    if isinstance(parsed_cert, list):
+                        mech.clean_certifications = ", ".join(parsed_cert)
+                    else:
+                        mech.clean_certifications = str(parsed_cert)
+                except Exception:
+                    mech.clean_certifications = raw_cert.strip('[]"\' ')
+            elif isinstance(raw_cert, list):
+                mech.clean_certifications = ", ".join(raw_cert)
+            else:
+                mech.clean_certifications = str(raw_cert)
+        else:
+            mech.clean_certifications = "None"
+
     context = {
         'stats': {
             'total_commission': total_commission,
@@ -417,16 +490,17 @@ def admin_dashboard(request):
             'active_bookings': active_bookings,
             'total_orders': total_orders,
         },
-        'bookings': Booking.objects.select_related('assigned_mechanic').all(),
+        'bookings': Booking.objects.select_related('assigned_mechanic')
+        .all()
+        .order_by('-id'),
         'cars': cars_with_details,
-        'orders': PartOrder.objects.all(),
-        'inquiries': Inquiry.objects.all(),
-        'parts': AutoPart.objects.all(),
-        'part_requests': PartRequest.objects.all(),
+        'orders': PartOrder.objects.all().order_by('-id'),
+        'inquiries': Inquiry.objects.all().order_by('-id'),
+        'parts': AutoPart.objects.all().order_by('-id'),
+        'part_requests': PartRequest.objects.all().order_by('-id'),
         'mechanics': mechanics,
     }
     return render(request, 'main/admin_dashboard.html', context)
-
 
 # ============================================================
 # ACTIONS (UPDATED FOR ADMIN OVERRIDE & RE-ASSIGNMENT)

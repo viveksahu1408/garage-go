@@ -36,8 +36,6 @@ class User(AbstractUser):
 
 
 class Mechanic(models.Model):
-    """Mechanic/Workshop profile"""
-    
     STATUS_CHOICES = [
         ('Pending', 'Pending'),
         ('Active', 'Active'),
@@ -48,12 +46,14 @@ class Mechanic(models.Model):
     name = models.CharField(max_length=100)
     contact = models.CharField(max_length=15)
     shop_name = models.CharField(max_length=200)
-    
-    # ➕ ADD/UPDATE THESE FIELDS FOR IMAGES & ADDRESS
     address = models.TextField(blank=True, null=True, help_text="Full Shop Address")
     id_card = models.CharField(max_length=200)  # Aadhaar Number
     id_card_photo = models.ImageField(upload_to='mechanics/ids/', blank=True, null=True)
-    shop_photo = models.ImageField(upload_to='mechanics/shops/', blank=True, null=True) # Changed from URLField to ImageField
+    shop_photo = models.ImageField(upload_to='mechanics/shops/', blank=True, null=True)
+    
+    # 🆕 NEW FIELDS ADDED:
+    selfie_photo = models.ImageField(upload_to='mechanics/selfies/', blank=True, null=True) # Selfie / Live Photo
+    services_offered = models.JSONField(default=list, blank=True) # Selected services list
     
     certifications = models.JSONField(default=list, blank=True)
     city = models.CharField(max_length=50)
