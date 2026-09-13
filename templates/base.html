@@ -64,7 +64,7 @@
             width: auto;
             object-fit: contain;
             display: block;
-            }
+        }
         .btn-primary {
             background: var(--primary);
             border-color: var(--primary);
@@ -108,7 +108,7 @@
         }
         .social-btn:hover { background: var(--primary); transform: translateY(-3px); }
         
-        /* Floating WhatsApp Button - FIXED bottom position */
+        /* Floating WhatsApp Button */
         .whatsapp-float {
             position: fixed;
             bottom: 85px;
@@ -131,9 +131,111 @@
             color: #fff;
         }
 
-        /* ============================================ */
-        /* CUSTOM MOBILE MENU DRAWER - Pure CSS/JS */
-        /* ============================================ */
+        /* Floating AI Chatbot Toggle Button */
+        .chatbot-float {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: var(--primary);
+            color: #FFF;
+            border-radius: 50px;
+            text-align: center;
+            font-size: 24px;
+            box-shadow: 2px 4px 14px rgba(91,63,217,0.4);
+            z-index: 1000;
+            width: 55px;
+            height: 55px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .chatbot-float:hover {
+            transform: scale(1.1);
+            background-color: var(--primary-dark);
+        }
+
+        /* Chat Widget Window */
+        .chatbot-card {
+            position: fixed;
+            bottom: 85px;
+            right: 20px;
+            width: 330px;
+            max-width: 90vw;
+            height: 430px;
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            z-index: 1005;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid rgba(0,0,0,0.08);
+        }
+        .chatbot-header {
+            background: var(--primary);
+            color: #fff;
+            padding: 12px 16px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .chatbot-messages {
+            flex: 1;
+            padding: 14px;
+            overflow-y: auto;
+            background: #f8f9fa;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .chat-bubble {
+            max-width: 80%;
+            padding: 8px 12px;
+            border-radius: 12px;
+            font-size: 0.88rem;
+            line-height: 1.4;
+        }
+        .chat-bubble-bot {
+            background: #e9ecef;
+            color: #212529;
+            align-self: flex-start;
+            border-bottom-left-radius: 2px;
+        }
+        .chat-bubble-user {
+            background: var(--primary);
+            color: #ffffff;
+            align-self: flex-end;
+            border-bottom-right-radius: 2px;
+        }
+        .chatbot-footer {
+            padding: 8px 10px;
+            background: #fff;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 6px;
+        }
+        .chatbot-footer input {
+            flex: 1;
+            border: 1px solid #ced4da;
+            border-radius: 20px;
+            padding: 6px 12px;
+            font-size: 0.88rem;
+            outline: none;
+        }
+        .chatbot-footer button {
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* CUSTOM MOBILE MENU DRAWER */
         .gg-drawer-overlay {
             position: fixed;
             top: 0;
@@ -274,7 +376,6 @@
             color: var(--text);
         }
 
-        /* Hamburger button */
         .gg-hamburger {
             width: 42px;
             height: 42px;
@@ -320,9 +421,29 @@
     <i class="bi bi-whatsapp"></i>
 </a>
 
-<!-- ============================================ -->
+<!-- Floating AI Chatbot Button -->
+<div class="chatbot-float" onclick="toggleChatbot()" title="GarageGo Assistant">
+    <i class="bi bi-robot"></i>
+</div>
+
+<!-- AI Chatbot Card -->
+<div class="chatbot-card" id="chatbotCard">
+    <div class="chatbot-header">
+        <span><i class="bi bi-robot me-1"></i> GarageGo Assistant</span>
+        <i class="bi bi-x-lg" style="cursor: pointer;" onclick="toggleChatbot()"></i>
+    </div>
+    <div class="chatbot-messages" id="chatbotMessages">
+        <div class="chat-bubble chat-bubble-bot">
+            Namaste! Main GarageGo Assistant hoon. Aapki kya sahayata kar sakta hoon? Or adhik jankari ke liye call ya whatsapp karen +91 6264658484.
+        </div>
+    </div>
+    <div class="chatbot-footer">
+        <input type="text" id="chatbotInput" placeholder="Sawal pucho..." onkeypress="handleKeyPress(event)">
+        <button onclick="sendChatMessage()"><i class="bi bi-send-fill"></i></button>
+    </div>
+</div>
+
 <!-- CUSTOM MOBILE MENU DRAWER -->
-<!-- ============================================ -->
 <div class="gg-drawer-overlay" id="ggDrawerOverlay" onclick="closeDrawer()"></div>
 
 <div class="gg-drawer" id="ggDrawer">
@@ -416,7 +537,6 @@
                 </select>
             </form>
             
-            <!-- Custom Hamburger Button -->
             <button class="gg-hamburger" type="button" onclick="openDrawer()" aria-label="Open menu">
                 <span></span>
                 <span></span>
@@ -495,11 +615,10 @@
             <!-- Col 1: About Company -->
             <div class="col-lg-4 col-md-6">
                 <a class="navbar-brand" href="{% url 'home' %}">
-            <img src="https://i.postimg.cc/qqsjp7Sk/YP-MART.jpg" 
-                 alt="GarageGo Logo" 
-                 class="brand-logo">
-                 
-              </a>
+                    <img src="https://i.postimg.cc/qqsjp7Sk/YP-MART.jpg" 
+                         alt="GarageGo Logo" 
+                         class="brand-logo">
+                </a>
                 <h5 class="text-white fw-bold mb-3"> GarageGo</h5>
                 <p class="small text-white">GarageGo is your trusted multi-brand car care aggregator platform connecting car owners with verified local workshops & certified mechanics.</p>
                 <div class="d-flex align-items-center gap-2 mt-3">
@@ -556,7 +675,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-<!-- Custom Drawer JavaScript -->
+<!-- Custom Drawer & Chatbot JS -->
 <script>
     function openDrawer() {
         document.getElementById('ggDrawer').classList.add('active');
@@ -570,19 +689,74 @@
         document.body.classList.remove('drawer-open');
     }
 
-    // Close drawer on Escape key
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
             closeDrawer();
         }
     });
 
-    // Close drawer when clicking on any link inside drawer
     document.querySelectorAll('.gg-drawer-body a.gg-menu-link').forEach(function(link) {
         link.addEventListener('click', function() {
             closeDrawer();
         });
     });
+
+    /* Chatbot Functions */
+    function toggleChatbot() {
+        const card = document.getElementById('chatbotCard');
+        if (card.style.display === 'none' || card.style.display === '') {
+            card.style.display = 'flex';
+        } else {
+            card.style.display = 'none';
+        }
+    }
+
+    function handleKeyPress(e) {
+        if (e.key === 'Enter') {
+            sendChatMessage();
+        }
+    }
+
+    function sendChatMessage() {
+        const input = document.getElementById('chatbotInput');
+        const text = input.value.trim();
+        if (!text) return;
+
+        const messagesContainer = document.getElementById('chatbotMessages');
+
+        // User Bubble Append
+        const userDiv = document.createElement('div');
+        userDiv.className = 'chat-bubble chat-bubble-user';
+        userDiv.innerText = text;
+        messagesContainer.appendChild(userDiv);
+
+        input.value = '';
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+        // Fetch Backend Endpoint
+        fetch('/api/chatbot/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ message: text })
+        })
+        .then(res => res.json())
+        .then(data => {
+            const botDiv = document.createElement('div');
+            botDiv.className = 'chat-bubble chat-bubble-bot';
+            botDiv.innerText = data.reply || 'Koi uttar nahi mila.';
+            messagesContainer.appendChild(botDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        })
+        .catch(err => {
+            const errDiv = document.createElement('div');
+            errDiv.className = 'chat-bubble chat-bubble-bot';
+            errDiv.innerText = 'Network issue. Kripya punah prayas karein.';
+            messagesContainer.appendChild(errDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        });
+    }
 </script>
 
 {% block extra_js %}{% endblock %}

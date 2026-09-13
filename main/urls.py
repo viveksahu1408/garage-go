@@ -49,5 +49,5 @@ urlpatterns = [
 
     path('booking/<int:booking_id>/accept-instant/', views.accept_booking_instant, name='accept_booking_instant'),
     path('booking/<int:booking_id>/feedback/', views.submit_booking_feedback, name='submit_booking_feedback'),
-
+    path('api/chatbot/', views.chatbot_api, name='chatbot_api'),
 ]

@@ -7,6 +7,10 @@ from django.utils import timezone
 from decimal import Decimal
 from django.db.models import Avg, Count, Prefetch
 
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import json
+
 from .models import (
     User, Mechanic, Booking, MarketplaceCar, 
     AutoPart, PartOrder, Inquiry, ServiceCategory, City,
@@ -783,3 +787,33 @@ def toggle_car_status(request, car_id):
     if request.user.role == 'mechanic':
         return redirect('mechanic_dashboard')
     return redirect('user_dashboard')
+
+# chatbot code 
+@csrf_exempt
+def chatbot_api(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        user_message = data.get('message', '').lower()
+        
+        # Standard Smart Auto-Responses
+        if 'mechanic' in user_message or 'book' in user_message:
+            reply = "Mechanic book karne ke liye dashboard par 'Find Mechanic' button dabaayein. Aapko live job alert mil jaayega."
+        elif 'part' in user_message or 'spare' in user_message:
+            reply = "Marketplace / Spare Parts section me jaakar aap parts purchase kar sakte hain ya custom jugad request send kar sakte hain."
+        elif 'aadhaar' in user_message or 'verification' in user_message:
+            reply = "Mechanic registration ke baad verification request admin ke paas pending rehti hai. Admin approval ke baad radar active ho jayega."
+        elif 'contact' in user_message or 'bat' in user_message or 'number' in user_message:
+            reply = "Aap humse +91 6264658484 par direct contact kar sakte hain."
+        elif 'time' in user_message or 'samay' in user_message:
+            reply = "Hamari service timings subah 8 AM se raat 9 PM tak hain."
+        elif 'location' in user_message or 'jagah' in user_message:
+            reply = "Hum Jabalpur, Katni, Satna sagar, damoh, mandla, dindori, seoni, mp ke maximum jilon me active hain."
+
+        elif 'upi' in user_message or 'payment' in user_message:
+            reply = "Payment aap UPI QR Code scan karke kar sakte hain aur transaction ID dashboard par update kar sakte hain."
+        else:
+            reply = "Main Aapka Auto Assistant hoon. Main mechanic booking, spare parts purchase, aur payment queries me aapki help kar sakta hoon. Aap kya poochna chahte hain? Or adhik jankari ke liye call ya whatsapp karen is no par +916264658484."
+
+        return JsonResponse({'status': 'success', 'reply': reply})
+    
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=400)
