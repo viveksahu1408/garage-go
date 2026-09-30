@@ -139,5 +139,5 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 
 
-#  PrinceMart#2025
-#  GarageGo#2025
+#  Katni-PrinceMart#2025-2026
+#  GarageGo#2025-2026

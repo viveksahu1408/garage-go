@@ -111,17 +111,17 @@
         /* Floating WhatsApp Button */
         .whatsapp-float {
             position: fixed;
-            bottom: 85px;
-            right: 20px;
+            bottom: 85px; /* Mobile bottom bar ke upar rehne ke liye */
+            right: 15px;
             background-color: #25d366;
             color: #FFF;
             border-radius: 50px;
             text-align: center;
             font-size: 24px;
             box-shadow: 2px 2px 12px rgba(0,0,0,0.2);
-            z-index: 1000;
-            width: 55px;
-            height: 55px;
+            z-index: 1030;
+            width: 50px;
+            height: 50px;
             display: flex; align-items: center; justify-content: center;
             text-decoration: none;
             transition: 0.3s;
@@ -131,20 +131,20 @@
             color: #fff;
         }
 
-        /* Floating AI Chatbot Toggle Button */
+        /* Floating AI Chatbot Toggle Button (Shifted to LEFT Side) */
         .chatbot-float {
             position: fixed;
-            bottom: 20px;
-            right: 20px;
+            bottom: 85px; /* Bottom bar ke upar */
+            left: 15px;   /* Mobile screen ke LEFT side */
             background-color: var(--primary);
             color: #FFF;
             border-radius: 50px;
             text-align: center;
             font-size: 24px;
             box-shadow: 2px 4px 14px rgba(91,63,217,0.4);
-            z-index: 1000;
-            width: 55px;
-            height: 55px;
+            z-index: 1030;
+            width: 50px;
+            height: 50px;
             display: flex; align-items: center; justify-content: center;
             cursor: pointer;
             transition: 0.3s;
@@ -154,18 +154,18 @@
             background-color: var(--primary-dark);
         }
 
-        /* Chat Widget Window */
+        /* Chat Widget Window (Left Side par khulega) */
         .chatbot-card {
             position: fixed;
-            bottom: 85px;
-            right: 20px;
-            width: 330px;
-            max-width: 90vw;
-            height: 430px;
+            bottom: 145px; /* Floating button ke upar khulega */
+            left: 15px;    /* Left side align */
+            width: 320px;
+            max-width: 85vw;
+            height: 420px;
             background: #ffffff;
             border-radius: 16px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-            z-index: 1005;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            z-index: 1035;
             display: none;
             flex-direction: column;
             overflow: hidden;

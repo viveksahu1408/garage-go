@@ -164,45 +164,66 @@
                             <div class="modal-body">
                                 <div class="row g-3">
                                     <!-- Photos & Camera Captures (FIXED) -->
-                                    <div class="col-md-5 border-end">
-                                        <h6 class="fw-bold border-bottom pb-1 text-primary">🖼️ Uploaded & Live Photos</h6>
-                                        
-                                        <!-- 1. Live Selfie -->
-                                        <div class="mb-3">
-                                            <small class="fw-bold d-block text-muted mb-1">📸 Live Selfie / Profile:</small>
-                                            {% if mech.selfie_data %}
-                                                <img src="{{ mech.selfie_data }}" class="img-fluid rounded border shadow-sm" style="max-height: 140px; width: 100%; object-fit: contain;">
-                                            {% elif mech.profile_photo %}
-                                                <img src="{{ mech.profile_photo.url }}" class="img-fluid rounded border shadow-sm" style="max-height: 140px; width: 100%; object-fit: contain;">
-                                            {% else %}
-                                                <span class="text-muted small border p-2 d-block rounded bg-light">No selfie provided</span>
-                                            {% endif %}
-                                        </div>
+                                    <!-- Photos & Camera Captures -->
+<div class="col-md-5 border-end">
+    <h6 class="fw-bold border-bottom pb-1 text-primary">🖼️ Uploaded & Live Photos</h6>
+    
+    <!-- 1. Live Selfie -->
+    <div class="mb-3">
+        <small class="fw-bold d-block text-muted mb-1">📸 Live Selfie / Profile:</small>
+        {% if mech.selfie_photo %}
+            <a href="{{ mech.selfie_photo.url }}" target="_blank">
+                <img src="{{ mech.selfie_photo.url }}" class="img-fluid rounded border shadow-sm" style="max-height: 120px; width: 100%; object-fit: contain;">
+            </a>
+        {% elif mech.selfie_data %}
+            <img src="{{ mech.selfie_data }}" class="img-fluid rounded border shadow-sm" style="max-height: 120px; width: 100%; object-fit: contain;">
+        {% else %}
+            <span class="text-muted small border p-2 d-block rounded bg-light">No selfie provided</span>
+        {% endif %}
+    </div>
 
-                                        <!-- 2. Workshop Photo -->
-                                        <div class="mb-3">
-                                            <small class="fw-bold d-block text-muted mb-1">🏢 Workshop / Shop Photo:</small>
-                                            {% if mech.shop_photo %}
-                                                <a href="{{ mech.shop_photo.url }}" target="_blank">
-                                                    <img src="{{ mech.shop_photo.url }}" class="img-fluid rounded border shadow-sm" style="max-height: 140px; width: 100%; object-fit: contain;">
-                                                </a>
-                                            {% else %}
-                                                <span class="text-muted small border p-2 d-block rounded bg-light">No shop photo uploaded</span>
-                                            {% endif %}
-                                        </div>
+    <!-- 2. Workshop Photo -->
+    <div class="mb-3">
+        <small class="fw-bold d-block text-muted mb-1">🏢 Workshop / Shop Photo:</small>
+        {% if mech.shop_photo %}
+            <a href="{{ mech.shop_photo.url }}" target="_blank">
+                <img src="{{ mech.shop_photo.url }}" class="img-fluid rounded border shadow-sm" style="max-height: 120px; width: 100%; object-fit: contain;">
+            </a>
+        {% else %}
+            <span class="text-muted small border p-2 d-block rounded bg-light">No shop photo uploaded</span>
+        {% endif %}
+    </div>
 
-                                        <!-- 3. Aadhaar Photo -->
-                                        <div class="mb-2">
-                                            <small class="fw-bold d-block text-muted mb-1">💳 ID Card Photo (Aadhaar):</small>
-                                            {% if mech.id_card_photo %}
-                                                <a href="{{ mech.id_card_photo.url }}" target="_blank">
-                                                    <img src="{{ mech.id_card_photo.url }}" class="img-fluid rounded border shadow-sm" style="max-height: 140px; width: 100%; object-fit: contain;">
-                                                </a>
-                                            {% else %}
-                                                <span class="text-muted small border p-2 d-block rounded bg-light">No ID card photo uploaded</span>
-                                            {% endif %}
-                                        </div>
-                                    </div>
+    <!-- 3. ID Card Photos (Front & Back) -->
+    <div class="mb-2">
+        <small class="fw-bold d-block text-muted mb-1">💳 ID Card (Aadhaar) Photos:</small>
+        <div class="row g-2">
+            <!-- Front Photo -->
+            <div class="col-6">
+                <small class="text-muted d-block" style="font-size: 0.75rem;">Front Side:</small>
+                {% if mech.id_card_photo %}
+                    <a href="{{ mech.id_card_photo.url }}" target="_blank">
+                        <img src="{{ mech.id_card_photo.url }}" class="img-fluid rounded border shadow-sm" style="max-height: 110px; width: 100%; object-fit: contain;">
+                    </a>
+                {% else %}
+                    <span class="text-muted small border p-1 d-block rounded bg-light text-center">No Front</span>
+                {% endif %}
+            </div>
+
+            <!-- Back Photo -->
+            <div class="col-6">
+                <small class="text-muted d-block" style="font-size: 0.75rem;">Back Side:</small>
+                {% if mech.id_card_photoback %}
+                    <a href="{{ mech.id_card_photoback.url }}" target="_blank">
+                        <img src="{{ mech.id_card_photoback.url }}" class="img-fluid rounded border shadow-sm" style="max-height: 110px; width: 100%; object-fit: contain;">
+                    </a>
+                {% else %}
+                    <span class="text-muted small border p-1 d-block rounded bg-light text-center">No Back</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
 
                                     <!-- Personal & Business Details -->
                                     <div class="col-md-7">

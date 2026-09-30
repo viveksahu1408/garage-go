@@ -49,6 +49,8 @@ class Mechanic(models.Model):
     address = models.TextField(blank=True, null=True, help_text="Full Shop Address")
     id_card = models.CharField(max_length=200)  # Aadhaar Number
     id_card_photo = models.ImageField(upload_to='mechanics/ids/', blank=True, null=True)
+    id_card_photoback = models.ImageField(upload_to='mechanics/ids/', blank=True, null=True)
+
     shop_photo = models.ImageField(upload_to='mechanics/shops/', blank=True, null=True)
     
     # 🆕 NEW FIELDS ADDED:

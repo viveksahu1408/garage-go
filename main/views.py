@@ -122,18 +122,17 @@ def register_view(request):
             id_card = request.POST.get('id_card')
             certifications = request.POST.get('certifications', '')
             
-            # ➕ Direct File Uploads from request.FILES
+            # ➕ Direct File Uploads (Front & Back ID)
             id_card_photo = request.FILES.get('id_card_photo')
+            id_card_photoback = request.FILES.get('id_card_photoback') # 🆕 Back ID Photo
             shop_photo = request.FILES.get('shop_photo')
-            selfie_photo = request.FILES.get('selfie_photo') # 🎯 Fixed: Directly receiving selfie photo file
+            selfie_photo = request.FILES.get('selfie_photo')
 
-            # ➕ Dynamic Selected Services Checkbox Array
             selected_services = request.POST.getlist('services')
             
             if not shop_name or not city or not address or not id_card or not id_card_photo:
                 messages.error(request, 'Mechanic ke liye Shop, City, Address, ID Card & ID Photo jaruri hain!')
                 user.delete()
-                # Refetch categories for error rerender
                 all_categories = ServiceCategory.objects.prefetch_related('packages').all()
                 return render(request, 'main/register.html', {'categories': all_categories})
             
@@ -146,8 +145,9 @@ def register_view(request):
                 address=address,
                 id_card=id_card,
                 id_card_photo=id_card_photo,
+                id_card_photoback=id_card_photoback, # 🆕 Back Photo Saved
                 shop_photo=shop_photo,
-                selfie_photo=selfie_photo, # 🆕 Direct File Saved
+                selfie_photo=selfie_photo,
                 services_offered=selected_services,
                 certifications=[certifications] if certifications else ['ITI Certificate'],
                 status='Pending'
@@ -158,10 +158,9 @@ def register_view(request):
         messages.success(request, 'Registration successful! Profile Admin verification ke liye chali gayi hai. Ab login karein.')
         return redirect('login')
     
-    # ➕ Fetch dynamic service categories & packages created by Owner/Admin
     all_categories = ServiceCategory.objects.prefetch_related('packages').all()
-    
     return render(request, 'main/register.html', {'categories': all_categories})
+
 
 def logout_view(request):
     logout(request)
