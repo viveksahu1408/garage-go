@@ -816,3 +816,22 @@ def chatbot_api(request):
         return JsonResponse({'status': 'success', 'reply': reply})
     
     return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=400)
+
+# ============================================================
+# ADMIN PASSWORD RESET VIEW
+# ============================================================
+@login_required
+@role_required(['admin'])
+def admin_reset_password(request, user_id):
+    if request.method == 'POST':
+        user_obj = get_object_or_404(User, id=user_id)
+        new_password = request.POST.get('new_password')
+        
+        if new_password and len(new_password) >= 4:
+            user_obj.set_password(new_password)
+            user_obj.save()
+            messages.success(request, f"Password successfully updated for {user_obj.contact} ({user_obj.get_full_name() or user_obj.username})!")
+        else:
+            messages.error(request, "Password kam se kam 4 characters ka hona chahiye!")
+            
+    return redirect('admin_dashboard')

@@ -17,19 +17,49 @@
                             <label class="form-label small fw-bold text-muted">Contact Mobile Number *</label>
                             <input type="tel" name="contact" class="form-control" placeholder="E.g., 9001122334" required>
                         </div>
-                        <div class="mb-4">
+                        <div class="mb-2">
                             <label class="form-label small fw-bold text-muted">Password *</label>
                             <input type="password" name="password" class="form-control" placeholder="Password daalein" required>
                         </div>
+                        
+                        <!-- 🔑 Forgot Password Link -->
+                        <div class="text-end mb-4">
+                            <a href="#" class="small text-decoration-none text-primary fw-bold" data-bs-toggle="modal" data-bs-target="#forgotPasswordModal">
+                                Forgot Password? / Password Bhool Gaye?
+                            </a>
+                        </div>
+
                         <button type="submit" class="btn btn-success w-100 fw-bold py-2">🔑 SECURE LOGIN</button>
                     </form>
                     
                     <div class="text-center mt-4 pt-3 border-top">
                         <p class="text-muted small">Account nahi hai? <a href="{% url 'register' %}" class="text-decoration-none fw-bold">Naya Account Banayein</a></p>
                     </div>
-                    
-                    
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- FORGOT PASSWORD WHATSAPP MODAL -->
+<div class="modal fade" id="forgotPasswordModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold">🔑 Reset / Recover Password</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <div class="fs-1 mb-2">💬</div>
+                <h6 class="fw-bold text-dark">WhatsApp Helpdesk Contact Karein</h6>
+                <p class="small text-muted mb-3">
+                    Agar aap apna password bhool gaye hain, toh kripya WhatsApp support par apna Registered Mobile Number bhej kar password reset karwayein.
+                </p>
+                <a href="https://wa.me/916264658484?text=Hello%20Admin,%20Mai%20GarageGo%20app%20ka%20password%20bhool%20gaya%20hoon.%20Mera%20Registered%20Mobile%20Number%20hai:%20" 
+                   target="_blank" 
+                   class="btn btn-success fw-bold px-4 py-2 rounded-pill">
+                    📲 Send WhatsApp Message (+91 6264658484)
+                </a>
             </div>
         </div>
     </div>
